@@ -1,7 +1,13 @@
 # Kick Chronicle 
 **Platform Highlight& Jadwal Sepak Bola"
-Kick Chronicle meruapakn sebuah aplikasi web yang menyajikan video highlight pertandingan sepak bola, statistik tim, serta penjadwalan yang dapat terhubung dengan Google Calendar. Aplikasi web ini mendukung autentikasi autentikasi Google OAuth.
+Kick Chronicle merupakan sebuah aplikasi web yang menyajikan video highlight pertandingan sepak bola, statistik tim, serta penjadwalan yang dapat terhubung dengan Google Calendar. Aplikasi web ini mendukung autentikasi autentikasi Google OAuth.
 
+## Anggota Kelompok
+- Derrick (2406351440)
+- Go Nadine Audelia (2406348774)
+- Rehema Zurafa Saputra (2406432072)
+- Andi Maura Azzahra (2406409076)
+- Daffa Abhinaya Avensinanoor (2406405720)
 
 ## Deskripsi Aplikasi
 ### Ringkasan Aplikasi
@@ -15,13 +21,13 @@ Aplikasi ini menyediakan video highlight pertandingan sepak bola, statistik tim,
 ### Target Pengguna
 Penggemar olahraga sepak bola
 
-## Fitur Utama
+## Fitur Utama Pengguna
 ### User
-- Autentikasi dengan Google OAuth
-- Menonton highlight pertandingan
-- Memperoleh statistik dan klasemen tim
-- Menambahkan jadwal pertandingan Google Calendar yang berupa export file .ics
-- User dapat berkomentar, memberi like dan komen sesuai dengan video highlight yang diinginkan
+- Autentikasi dengan Google OAuth (Derrick)
+- Menonton highlight pertandingan (Rehema Zurafa Saputra)
+- Memperoleh statistik dan klasemen tim (Daffa Abhinaya Avensinanoor)
+- Menambahkan jadwal pertandingan Google Calendar yang berupa export file .ics (Go Nadine Audelia)
+- User dapat berkomentar, memberi like dan komen sesuai dengan video highlight yang diinginkan (Andi Maura Azzahra)
 
 ### Admin
 - Admin dapat mengimplementasi CRUD data tim, jadwal, dan highlight
