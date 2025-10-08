@@ -45,10 +45,10 @@ Penggemar olahraga sepak bola
 ## Initial Dataset
 - Highlight diambil dari embded video yang ada di Youtube
 -  Dataset sepak bola berbentuk CSV/JSON :
-https://github.com/openfootball
 
+https://github.com/openfootball
 https://www.kaggle.com/search?q=football+dataset
 
 ## Tautan Deployment PWS dan Link Design
-- PWS : derrick-kickchronicle.pbp.cs.ui.ac.id
+- PWS : https://derrick-kickchronicle.pbp.cs.ui.ac.id
 - Figma : https://www.figma.com/design/IoJuqP32KoKrtjMn1QZBU2/Web-PBP?node-id=0-1&t=wWxrSbKCbXsgsOid-1
