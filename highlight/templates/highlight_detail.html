@@ -1,0 +1,7 @@
+{% load embed_video_tags %}
+
+{% video highlight.url as highlight_video %}
+    <iframe src="{{ highlight_video.url }}" frameborder="0" allowfullscreen></iframe>
+{% endvideo %}
+
+
