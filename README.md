@@ -35,12 +35,12 @@ Penggemar olahraga sepak bola
 - Menjadi mod pada sesi komentar (mencegah komentar buruk)
 
 ## Daftar Modul 
-- Auth & Profil -> Login, Registrasi, Google OAuth, profil pengguna (Alternatif -> tidak menggunakan Google Oauth dan implementasi dasar login register saja)
-- Highlight -> Daftar dan detail highlight serta pencarian
-- Tim -> Daftar tim dan klasemen
-- Komentar, Like, Rating -> Reaction pada video highlight yang ditonton
-- Panel Admin -> CRUD data dan impor atau ekspor dataset
-- Kalender -> Integrasi jadwal dalam bentuk file yang dapat di import ke google calender (Alternatif -> Atur jadwal hanya bisa dilakukan pada web setelah user melakukan login)
+- Auth & Profil -> Login, Registrasi, Google OAuth, profil pengguna (Alternatif -> tidak menggunakan Google Oauth dan implementasi dasar login register saja) (Derrick)
+- Highlight -> Daftar dan detail highlight serta pencarian (Rehema Zurafa Saputra)
+- Tim -> Daftar tim dan klasemen (Daffa Abhinaya Avensinanoor)
+- Komentar, Like, Rating -> Reaction pada video highlight yang ditonton (Andi Maura Azzahra)
+- Panel Admin -> CRUD data dan impor atau ekspor dataset (Derrick)
+- Kalender -> Integrasi jadwal dalam bentuk file yang dapat di import ke google calender (Alternatif -> Atur jadwal hanya bisa dilakukan pada web setelah user melakukan login) (Go Nadine Audelia)
 
 ## Initial Dataset
 - Highlight diambil dari embded video yang ada di Youtube
