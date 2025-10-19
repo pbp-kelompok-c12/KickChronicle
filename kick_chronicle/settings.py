@@ -67,7 +67,7 @@ ROOT_URLCONF = 'kick_chronicle.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -101,6 +101,13 @@ if PRODUCTION:
             }
         }
     }
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
 else:
     # Development: gunakan SQLite
     DATABASES = {
@@ -109,7 +116,15 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
+    if os.getenv('EMAIL_HOST_USER'):
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+        EMAIL_HOST = 'smtp.gmail.com'
+        EMAIL_PORT = 587
+        EMAIL_USE_TLS = True
+        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

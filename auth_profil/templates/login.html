@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div id="reset-password-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden animate-fade-in">
+    <div id="modal-card" class="w-full max-w-md bg-card p-8 border border-border/50 shadow-xl rounded-2xl m-4 relative animate-scale-in">
+        <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+        <div id="modal-content">
+            <h2 class="heading-md text-foreground mb-2">Reset Password</h2>
+            <p class="text-muted-foreground mb-6">Masukkan alamat email Anda, dan kami akan mengirimkan instruksi untuk mereset password Anda.</p>
+            {% include 'password_reset_form.html' %}
+        </div>
+    </div>
+</div>
+<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-background via-background to-primary/5">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent mx-auto mb-6 shadow-lg">
+                <span class="text-2xl font-black text-white">KC</span>
+            </div>
+            <h1 class="heading-lg text-foreground mb-2">Kick Chronicle</h1>
+            <p class="text-muted-foreground">Watch highlights, follow your teams</p>
+        </div>
+
+        <div class="bg-card p-8 border border-border/50 shadow-xl rounded-2xl">
+            {% if form.non_field_errors %}
+                <div class="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-3">
+                    <p class="text-sm text-destructive">Invalid username or password.</p>
+                </div>
+            {% endif %}
+
+            <form method="POST" class="space-y-4 mb-6">
+                {% csrf_token %}
+                <div>
+                    <label for="id_username" class="block text-sm font-semibold text-foreground mb-2">Username</label>
+                    <input type="text" name="username" id="id_username" class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent" placeholder="PakBepe" required>
+                </div>
+                <div>
+                    <label for="id_password" class="block text-sm font-semibold text-foreground mb-2">Password</label>
+                    <input type="password" name="password" id="id_password" class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent" placeholder="••••••••" required>
+                </div>
+                <div class="text-right">
+                    <a href="#" id="forgot-password-link" class="text-sm font-semibold text-accent hover:text-accent/80">Forgot password?</a>
+                </div>
+                <button type="submit" class="w-full py-3 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg">Sign In</button>
+            </form>
+        </div>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-muted-foreground">
+                Don't have an account? <a href="{% url 'auth_profil:register' %}" class="font-semibold text-accent hover:text-accent/80">Create one</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('reset-password-modal');
+    const openModalLink = document.getElementById('forgot-password-link');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const modalContent = document.getElementById('modal-content');
+    
+    openModalLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.classList.remove('hidden');
+    });
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+    };
+    closeModalBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    modal.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form.id === 'password-reset-form') {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: new URLSearchParams(formData),
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    modalContent.innerHTML = `
+                        <h2 class="heading-md text-foreground mb-2">Cek Email Anda</h2>
+                        <p class="text-muted-foreground">Prosedur untuk mengubah password sudah dikirimkan ke email Anda. Silakan periksa kotak masuk Anda.</p>
+                    `;
+                } else {
+                    modalContent.innerHTML = `
+                        <h2 class="heading-md text-red-500 mb-2">Terjadi Kesalahan</h2>
+                        <p class="text-muted-foreground">Tidak dapat mengirim email reset. Pastikan email yang Anda masukkan sudah benar dan terdaftar.</p>
+                        <button onclick="location.reload()" class="mt-4 w-full py-2 font-semibold bg-primary text-primary-foreground rounded-lg">Coba Lagi</button>
+                    `;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+:root {
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.55 0.3 264);
+  --primary-foreground: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.65 0.25 40);
+  --destructive: oklch(0.55 0.25 27);
+  --border: oklch(0.2 0 0);
+  --ring: oklch(0.55 0.3 264);
+}
+
+body {
+    font-family: 'Geist', sans-serif; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
