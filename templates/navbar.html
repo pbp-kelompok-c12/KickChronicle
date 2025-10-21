@@ -1,0 +1,28 @@
+<nav class="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur" role="navigation">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
+                    <span class="text-lg font-bold text-white">KC</span>
+                </div>
+                <span class="hidden font-bold text-foreground sm:inline">Kick Chronicle</span>
+            </a>
+
+            <div class="flex items-center gap-2">
+                {% if user.is_authenticated %}
+                    <span class="text-sm text-gray-300 mr-2">Hello, {{ user.first_name|default:user.username }}!</span>
+                    <a href="{% url 'auth_profil:logout' %}">
+                        <button class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Logout</button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'auth_profil:login' %}">
+                        <button class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Sign In</button>
+                    </a>
+                    <a href="{% url 'auth_profil:register' %}">
+                        <button class="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90">Create Account</button>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

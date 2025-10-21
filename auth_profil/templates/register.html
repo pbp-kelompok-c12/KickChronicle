@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-background via-background to-primary/5">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent mx-auto mb-6 shadow-lg">
+                <span class="text-2xl font-black text-white">KC</span>
+            </div>
+            <h1 class="heading-lg text-foreground mb-2">Join Kick Chronicle</h1>
+            <p class="text-muted-foreground">Create your account to get started</p>
+        </div>
+
+        <div class="bg-card p-8 border border-border/50 shadow-xl rounded-2xl">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">{{ field.label }}</label>
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent" required>
+                        
+                        {% if field.name == "email" %}
+                        <div id="email-validator" class="mt-2 flex items-center gap-2 hidden">
+                            <span id="email-validator-icon"></span>
+                            <span id="email-validator-text" class="text-xs"></span>
+                        </div>
+                        {% endif %}
+
+                        {% if field.name == "password1" %}
+                            <div id="strength-tracker" class="space-y-3 mt-3 hidden">
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-xs font-semibold text-foreground">Password Strength</label>
+                                        <span id="strength-text" class="text-xs font-bold"></span>
+                                    </div>
+                                    <div id="strength-bars" class="flex gap-1">
+                                        <div class="h-2 flex-1 rounded-full bg-border/30"></div>
+                                        <div class="h-2 flex-1 rounded-full bg-border/30"></div>
+                                        <div class="h-2 flex-1 rounded-full bg-border/30"></div>
+                                        <div class="h-2 flex-1 rounded-full bg-border/30"></div>
+                                        <div class="h-2 flex-1 rounded-full bg-border/30"></div>
+                                    </div>
+                                </div>
+                                <div id="requirements-checklist" class="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-1.5"></div>
+                            </div>
+                        {% endif %}
+
+                        {% if field.name == "password2" %}
+                        <div id="confirm-password-validator" class="mt-2 flex items-center gap-2 hidden">
+                            <span id="confirm-password-icon"></span>
+                            <span id="confirm-password-text" class="text-xs"></span>
+                        </div>
+                        {% endif %}
+
+                        {% for error in field.errors %}<p class="mt-2 text-xs text-destructive">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endfor %}
+                
+                <button type="submit" class="w-full py-3 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg !mt-6">Create Account</button>
+            </form>
+        </div>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-muted-foreground">
+                Already have an account? <a href="{% url 'auth_profil:login' %}" class="font-semibold text-accent hover:text-accent/80">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const metIcon = `<svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    const unmetIcon = `<svg class="w-4 h-4 text-border/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    const validIcon = `<svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+    const invalidIcon = `<svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
+
+    // --- Password Strength Tracker ---
+    const passwordInput = document.getElementById('id_password1');
+    const tracker = document.getElementById('strength-tracker');
+    if (passwordInput && tracker) {
+        const strengthText = document.getElementById('strength-text');
+        const strengthBars = Array.from(document.getElementById('strength-bars').children);
+        const checklist = document.getElementById('requirements-checklist');
+        const requirements = [
+            { label: "At least 8 characters", check: (p) => p.length >= 8 },
+            { label: "Uppercase letter (A-Z)", check: (p) => /[A-Z]/.test(p) },
+            { label: "Lowercase letter (a-z)", check: (p) => /[a-z]/.test(p) },
+            { label: "Number (0-9)", check: (p) => /\d/.test(p) },
+            { label: "Special character (!@#$...)", check: (p) => /[^A-Za-z0-9]/.test(p) },
+        ];
+
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            if (password.length === 0) { tracker.classList.add('hidden'); return; }
+            tracker.classList.remove('hidden');
+
+            let score = 0;
+            let checklistHTML = '<p class="text-xs font-semibold text-foreground">Requirements:</p><ul class="space-y-1.5">';
+            requirements.forEach(req => {
+                const met = req.check(password);
+                if (met) score++;
+                checklistHTML += `<li class="flex items-center gap-2"><span class="flex-shrink-0">${met ? metIcon : unmetIcon}</span><span class="text-xs ${met ? 'text-foreground' : 'text-muted-foreground'}">${req.label}</span></li>`;
+            });
+            checklist.innerHTML = checklistHTML + '</ul>';
+
+            let strength = { text: "Weak", textColor: "text-destructive", barColor: "bg-destructive" };
+            if (score >= 5) strength = { text: "Strong", textColor: "text-green-500", barColor: "bg-green-500" };
+            else if (score >= 4) strength = { text: "Good", textColor: "text-yellow-500", barColor: "bg-yellow-500" };
+            else if (score >= 3) strength = { text: "Fair", textColor: "text-orange-500", barColor: "bg-orange-500" };
+
+            strengthText.textContent = strength.text;
+            strengthText.className = `text-xs font-bold ${strength.textColor}`;
+            strengthBars.forEach((bar, i) => {
+                bar.className = `h-2 flex-1 rounded-full ${i < score ? strength.barColor : 'bg-border/30'}`;
+            });
+        });
+    }
+
+    // --- Email Validator ---
+    const emailInput = document.getElementById('id_email');
+    const emailValidator = document.getElementById('email-validator');
+    if (emailInput && emailValidator) {
+        const emailIcon = document.getElementById('email-validator-icon');
+        const emailText = document.getElementById('email-validator-text');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        emailInput.addEventListener('input', () => {
+            const email = emailInput.value;
+            if (email.length === 0) { emailValidator.classList.add('hidden'); return; }
+            emailValidator.classList.remove('hidden');
+            if (emailRegex.test(email)) {
+                emailIcon.innerHTML = validIcon;
+                emailText.textContent = 'Format email valid.';
+                emailText.className = 'text-xs text-green-500';
+            } else {
+                emailIcon.innerHTML = invalidIcon;
+                emailText.textContent = 'Format email tidak valid.';
+                emailText.className = 'text-xs text-red-500';
+            }
+        });
+    }
+
+    // --- Confirm Password Validator ---
+    const confirmPasswordInput = document.getElementById('id_password2');
+    const confirmPasswordValidator = document.getElementById('confirm-password-validator');
+    if (passwordInput && confirmPasswordInput && confirmPasswordValidator) {
+        const confirmIcon = document.getElementById('confirm-password-icon');
+        const confirmText = document.getElementById('confirm-password-text');
+        
+        const validatePasswords = () => {
+            const pass = passwordInput.value;
+            const confirmPass = confirmPasswordInput.value;
+            if (confirmPass.length === 0 && pass.length === 0) { confirmPasswordValidator.classList.add('hidden'); return; }
+            confirmPasswordValidator.classList.remove('hidden');
+
+            if (pass === confirmPass && pass.length > 0) {
+                confirmIcon.innerHTML = validIcon;
+                confirmText.textContent = 'Password cocok.';
+                confirmText.className = 'text-xs text-green-500';
+            } else {
+                confirmIcon.innerHTML = invalidIcon;
+                confirmText.textContent = 'Password tidak cocok.';
+                confirmText.className = 'text-xs text-red-500';
+            }
+        };
+        passwordInput.addEventListener('input', validatePasswords);
+        confirmPasswordInput.addEventListener('input', validatePasswords);
+    }
+});
+</script>
+{% endblock %}
