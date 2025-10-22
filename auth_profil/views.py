@@ -25,7 +25,7 @@ def login_user(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"Anda berhasil login sebagai {username}.")
-                return redirect('auth_profil:login')
+                return redirect('highlight:show_main_page')
             else:
                 messages.error(request, "Username atau password salah.")
         else:
