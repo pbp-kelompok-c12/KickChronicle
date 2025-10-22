@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
-from .forms import CustomUserCreationForm
+from django.contrib.auth.decorators import login_required
+from .forms import CustomUserCreationForm, EditProfileForm, CustomPasswordChangeForm
+from django.http import JsonResponse
+import json
 
 def register_user(request):
     if request.method == 'POST':
@@ -38,3 +41,50 @@ def logout_user(request):
     logout(request)
     messages.success(request, "Anda berhasil logout.")
     return redirect('auth_profil:login')
+
+@login_required
+def profile_view(request):
+    edit_form = EditProfileForm(instance=request.user)
+    password_form = CustomPasswordChangeForm(user=request.user)
+    has_password = request.user.has_usable_password()
+    context = {
+        'edit_form': edit_form,
+        'password_change_form': password_form,
+        'has_password': has_password
+    }
+    return render(request, 'profile.html', context)
+
+@login_required
+def edit_profile_view(request):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        form = EditProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': 'success', 'message': 'Profil berhasil diperbarui!'})
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors})
+    
+    form = EditProfileForm(instance=request.user)
+    return render(request, 'edit_profile.html', {'form': form})
+
+@login_required
+def delete_account_view(request):
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, 'Your account has been permanently deleted.')
+        return redirect('/')
+    return render(request, 'delete_account_confirm.html')
+
+@login_required
+def password_change_view(request):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  
+            return JsonResponse({'status': 'success', 'message': 'Password updated successfully!'})
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors})
+    return redirect('auth_profil:profile')

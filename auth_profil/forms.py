@@ -1,4 +1,4 @@
-from django.contrib.auth.forms import UserCreationForm, SetPasswordForm
+from django.contrib.auth.forms import UserCreationForm, SetPasswordForm, PasswordChangeForm
 from django import forms
 from django.contrib.auth.models import User
 
@@ -26,4 +26,34 @@ class CustomSetPasswordForm(SetPasswordForm):
         self.fields['new_password2'].widget.attrs.update({
             'placeholder': '••••••••',
             'class': 'w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent'
+        })
+
+class EditProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        tailwind_classes = "w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+        self.fields['username'].widget.attrs.update({'class': tailwind_classes})
+        self.fields['first_name'].widget.attrs.update({'class': tailwind_classes})
+        self.fields['last_name'].widget.attrs.update({'class': tailwind_classes})
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        tailwind_classes = "w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+        
+        self.fields['old_password'].widget.attrs.update({
+            'class': tailwind_classes,
+            'placeholder': 'Enter your current password'
+        })
+        self.fields['new_password1'].widget.attrs.update({
+            'class': tailwind_classes,
+            'placeholder': 'Enter your new password'
+        })
+        self.fields['new_password2'].widget.attrs.update({
+            'class': tailwind_classes,
+            'placeholder': 'Confirm your new password'
         })

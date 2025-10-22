@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const validIcon = `<svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
     const invalidIcon = `<svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
 
-    // --- Password Strength Tracker ---
     const passwordInput = document.getElementById('id_password1');
     const tracker = document.getElementById('strength-tracker');
     if (passwordInput && tracker) {
@@ -122,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- Email Validator ---
     const emailInput = document.getElementById('id_email');
     const emailValidator = document.getElementById('email-validator');
     if (emailInput && emailValidator) {
@@ -146,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- Confirm Password Validator ---
     const confirmPasswordInput = document.getElementById('id_password2');
     const confirmPasswordValidator = document.getElementById('confirm-password-validator');
     if (passwordInput && confirmPasswordInput && confirmPasswordValidator) {

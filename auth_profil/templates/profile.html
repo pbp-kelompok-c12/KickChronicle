@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Profile{% endblock %}
+
+{% block content %}
+<div id="edit-profile-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="w-full max-w-md bg-card p-8 border border-border/50 shadow-xl rounded-2xl m-4 relative">
+        <button id="close-edit-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+        <div id="edit-modal-content">
+            <h2 class="heading-md text-foreground mb-6">Edit Your Profile</h2>
+            <form id="edit-profile-form" method="POST" action="{% url 'auth_profil:edit_profile' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="{{ edit_form.username.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">Username</label>
+                    {{ edit_form.username }}
+                </div>
+                <div>
+                    <label for="{{ edit_form.first_name.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">First Name</label>
+                    {{ edit_form.first_name }}
+                </div>
+                <div>
+                    <label for="{{ edit_form.last_name.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">Last Name</label>
+                    {{ edit_form.last_name }}
+                </div>
+                <div class="flex gap-4 !mt-6">
+                    <button type="button" id="cancel-edit-btn" class="w-full text-center py-3 font-semibold bg-gray-600 hover:bg-gray-700 rounded-lg">Cancel</button>
+                    <button type="submit" class="w-full py-3 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="change-password-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="w-full max-w-md bg-card p-8 border border-border/50 shadow-xl rounded-2xl m-4 relative">
+        <button id="close-password-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+        <div id="password-modal-content">
+            <h2 class="heading-md text-foreground mb-6">Change Your Password</h2>
+            <form id="password-change-form" method="POST" action="{% url 'auth_profil:password_change' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="id_old_password" class="block text-sm font-semibold text-foreground mb-2">Old password</label>
+                    {{ password_change_form.old_password }}
+                    <div id="error-old_password" class="mt-2 text-xs text-red-400"></div>
+                </div>
+                 <div>
+                    <label for="id_new_password1" class="block text-sm font-semibold text-foreground mb-2">New password</label>
+                    {{ password_change_form.new_password1 }}
+                    <div id="error-new_password1" class="mt-2 text-xs text-red-400"></div>
+                </div>
+                 <div>
+                    <label for="id_new_password2" class="block text-sm font-semibold text-foreground mb-2">New password confirmation</label>
+                    {{ password_change_form.new_password2 }}
+                    <div id="error-new_password2" class="mt-2 text-xs text-red-400"></div>
+                </div>
+                <div class="flex gap-4 !mt-6">
+                    <button type="button" id="cancel-password-btn" class="w-full text-center py-3 font-semibold bg-gray-600 hover:bg-gray-700 rounded-lg">Cancel</button>
+                    <button type="submit" class="w-full py-3 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-card p-8 border border-border/50 shadow-xl rounded-2xl">
+        <div class="flex items-center gap-6">
+            <div id="profile-avatar" class="flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white">
+                {{ user.username.0|upper }}
+            </div>
+            <div>
+                <h2 id="profile-name" class="heading-md text-foreground">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
+                <p id="profile-email" class="text-muted-foreground mt-1">{{ user.email }}</p>
+                <p class="text-xs text-green-400 mt-2">Member since {{ user.date_joined|date:"F Y" }}</p>
+            </div>
+        </div>
+
+        <div class="border-t border-border/50 my-8"></div>
+
+        <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-foreground">Account Settings</h3>
+            <div class="grid sm:grid-cols-2 gap-4">
+                <button id="open-edit-modal-btn" class="block text-left p-4 rounded-lg border border-border/50 hover:bg-gray-800/50 transition-colors">
+                    <h4 class="font-semibold">Edit Profile</h4>
+                    <p class="text-sm text-muted-foreground mt-1">Update your username and personal information.</p>
+                </button>
+                {% if has_password %}
+                    <button id="open-password-modal-btn" class="block text-left p-4 rounded-lg border border-border/50 hover:bg-gray-800/50 transition-colors">
+                        <h4 class="font-semibold">Change Password</h4>
+                        <p class="text-sm text-muted-foreground mt-1">Update your account password for security.</p>
+                    </button>
+                {% else %}
+                    <div class="relative block text-left p-4 rounded-lg border border-border/50 opacity-50 cursor-not-allowed group">
+                        <h4 class="font-semibold">Change Password</h4>
+                        <p class="text-sm text-muted-foreground mt-1">Update your account password for security.</p>
+                        <div class="absolute bottom-full mb-2 hidden group-hover:block w-max bg-gray-700 text-white text-xs rounded py-1 px-2">
+                            You use Google to sign in.
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="border-t border-red-500/20 pt-6">
+                <h3 class="text-lg font-semibold text-red-400">Danger Zone</h3>
+                <div class="mt-4 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-semibold">Delete Account</h4>
+                        <p class="text-sm text-muted-foreground mt-1">Permanently delete your account and all associated data.</p>
+                    </div>
+                    <a href="{% url 'auth_profil:delete_account' %}" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- SCRIPT UNTUK MODAL EDIT PROFILE ---
+    const editModal = document.getElementById('edit-profile-modal');
+    const openEditModalBtn = document.getElementById('open-edit-modal-btn');
+    const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+    const editForm = document.getElementById('edit-profile-form');
+
+    if (openEditModalBtn) {
+        const closeEditModal = () => editModal.classList.add('hidden');
+        closeEditModalBtn.addEventListener('click', closeEditModal);
+        editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+        editModal.addEventListener('click', (e) => { if (e.target.id === 'cancel-edit-btn') closeEditModal(); });
+
+        openEditModalBtn.addEventListener('click', () => {
+            editModal.classList.remove('hidden');
+        });
+
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(editForm);
+            fetch(editForm.action, {
+                method: 'POST',
+                body: new URLSearchParams(formData),
+                headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken'), 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('profile-name').textContent = formData.get('first_name') + ' ' + formData.get('last_name');
+                    document.getElementById('profile-avatar').textContent = formData.get('username')[0].toUpperCase();
+                    const successAlert = document.getElementById('success-alert');
+                    successAlert.textContent = data.message;
+                    successAlert.classList.remove('hidden');
+                    closeEditModal();
+                    setTimeout(() => { successAlert.classList.add('hidden'); }, 5000);
+                } else {
+                    console.error('Validation errors:', data.errors);
+                    alert('An error occurred. Please check the form.');
+                }
+            })
+            .catch(error => console.error('AJAX Error:', error));
+        });
+    }
+
+    // --- SCRIPT UNTUK MODAL GANTI PASSWORD ---
+    const passwordModal = document.getElementById('change-password-modal');
+    const openPasswordModalBtn = document.getElementById('open-password-modal-btn');
+    const closePasswordModalBtn = document.getElementById('close-password-modal-btn');
+    const cancelPasswordBtn = document.getElementById('cancel-password-btn');
+    const passwordForm = document.getElementById('password-change-form');
+
+    if (openPasswordModalBtn) {
+        const closePasswordModal = () => passwordModal.classList.add('hidden');
+        openPasswordModalBtn.addEventListener('click', () => passwordModal.classList.remove('hidden'));
+        closePasswordModalBtn.addEventListener('click', closePasswordModal);
+        cancelPasswordBtn.addEventListener('click', closePasswordModal);
+        passwordModal.addEventListener('click', (e) => { if (e.target === passwordModal) closePasswordModal(); });
+
+        passwordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(passwordForm);
+            document.querySelectorAll('[id^="error-"]').forEach(el => el.textContent = '');
+
+            fetch(passwordForm.action, {
+                method: 'POST',
+                body: new URLSearchParams(formData),
+                headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken'), 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    closePasswordModal();
+                    const successAlert = document.getElementById('success-alert');
+                    successAlert.textContent = data.message;
+                    successAlert.classList.remove('hidden');
+                    setTimeout(() => { successAlert.classList.add('hidden'); }, 5000);
+                    passwordForm.reset();
+                } else {
+                    for (const [field, errors] of Object.entries(data.errors)) {
+                        const errorDiv = document.getElementById(`error-${field}`);
+                        if (errorDiv) {
+                            errorDiv.textContent = errors.join(' ');
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('AJAX Error:', error));
+        });
+    }
+});
+</script>
+{% endblock %}

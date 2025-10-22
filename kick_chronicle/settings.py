@@ -198,4 +198,18 @@ AUTHENTICATION_BACKENDS = (
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Mencegah halaman konfirmasi email (untuk mempermudah)
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# Mengatur agar login menggunakan email, bukan username
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False # Pengguna tidak perlu membuat username
+
+# Pengaturan Spesifik untuk Social Account (PENTING)
+SOCIALACCOUNT_EMAIL_REQUIRED = True # Memaksa provider (Google) untuk memberikan email
+SOCIALACCOUNT_AUTO_SIGNUP = True    # Otomatis membuat akun tanpa halaman konfirmasi tambahan (jika email baru)
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
 SOCIALACCOUNT_LOGIN_ON_GET = True

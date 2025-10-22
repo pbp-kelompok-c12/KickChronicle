@@ -1,0 +1,20 @@
+{% extends 'base_auth.html' %}
+
+{% block title %}Delete Account{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="bg-card p-8 border border-border/50 shadow-xl rounded-2xl text-center">
+            <p class="text-muted-foreground mb-6">Are you sure you want to permanently delete your account? This action cannot be undone.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="flex gap-4">
+                    <a href="{% url 'auth_profil:profile' %}" class="w-full py-3 font-semibold bg-gray-600 hover:bg-gray-700 rounded-lg">No, take me back</a>
+                    <button type="submit" class="w-full py-3 font-semibold bg-red-600 text-white hover:bg-red-700 rounded-lg">Yes, I'm sure</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
