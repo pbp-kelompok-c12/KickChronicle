@@ -2,15 +2,15 @@
 {% load static %}
 
 {% block content %}
-<div class="bg-gray-50 w-full pt-16 min-h-screen">
+<div class="w-full pt-16 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <a href="{% url 'highlight:add_highlight' %}" class="inline-flex items-center px-4 py-2 bg-white text-gray-600 font-semibold outline outline-2 outline-gray-600 outline-offset-[-2px] rounded-md hover:bg-gray-600 hover:text-white transition-colors mb-4">
+    <a href="{% url 'highlight:add_highlight' %}" class="inline-flex items-center px-4 py-2 bg-gray text-gray-600 font-semibold outline outline-2 outline-gray-600 outline-offset-[-2px] rounded-md hover:bg-gray-600 hover:text-white transition-colors mb-4">
       Add Highlight
     </a>
 
    <!-- Search and Filter Section -->
-    <div class="mb-8 bg-white rounded-lg border border-gray-200 p-4">
+    <div class="mb-8 bg-gray rounded-lg border border-gray-200 p-4">
       <form method="GET" action="{% url 'highlight:show_main_page' %}" class="flex items-center gap-4">
         
         <!-- Search Input -->
@@ -25,7 +25,7 @@
               type="text"
               name="q"
               value="{{ request.GET.q }}"
-              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white text-black placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm" {% comment %} <-- Added text-black here {% endcomment %}
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray text-black placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm" {% comment %} <-- Added text-black here {% endcomment %}
               placeholder="Search highlights by name..."
             >
         </div>
@@ -46,7 +46,7 @@
       {% empty %}
         
         <div class="col-span-1 md:col-span-2 lg:col-span-3">
-          <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <div class="bg-gray rounded-lg border border-gray-200 p-12 text-center">
             <h3 class="text-lg font-medium text-gray-900 mb-2">No Highlights found</h3>
           </div>
         </div>
