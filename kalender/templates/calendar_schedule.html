@@ -1,221 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calendar</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" />
-  <style>
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #ffffff;
-      color: #000;
-      padding: 5em;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .calendar-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #282828;
-      border-radius: 12px;
-      padding: 0.9em 1.8em;
-      width: 850px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-      position: relative;
-    }
-    .calendar-header button {
-      background: transparent;
-      border: 1px solid #888;
-      border-radius: 50%;
-      color: #ccc;
-      width: 38px;
-      height: 38px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .calendar-header button:hover {
-      background: #3a3a3a;
-      border-color: #aaa;
-    }
-    .calendar-header .date-display {
-      flex: 1;
-      text-align: center;
-      font-weight: 600;
-      font-size: 17px;
-      cursor: pointer;
-      color: #eee;
-      letter-spacing: 0.3px;
-    }
-    .flatpickr-calendar {
-      background-color: #282828 !important;
-      border: 1px solid #333 !important;
-      border-radius: 8px;
-      position: absolute !important;
-      top: 100% !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      margin-top: 10px !important;
-      z-index: 9999 !important;
-    }
-    .flatpickr-months,
-    .flatpickr-month,
-    .flatpickr-weekdays {
-      background-color: #282828 !important;
-      border: none !important;
-    }
-    .flatpickr-current-month {
-      color: #fff !important;
-    }
-    .flatpickr-current-month .flatpickr-monthDropdown-months,
-    .flatpickr-current-month .numInput.cur-year {
-      background: #282828 !important;
-      color: #fff !important;
-      font-weight: bold !important;
-      border: none !important;
-    }
-    .flatpickr-current-month .flatpickr-monthDropdown-months {
-      appearance: none !important;
-    }
-    .flatpickr-monthDropdown-months option {
-      background: #282828 !important;
-      color: #fff !important;
-    }
-    .flatpickr-monthDropdown-months option:checked,
-    .flatpickr-monthDropdown-months option:hover,
-    .flatpickr-monthDropdown-months option:focus {
-      background: #3a3a3a !important;
-      color: #fff !important;
-    }
-    .flatpickr-prev-month svg,
-    .flatpickr-next-month svg {
-      fill: #fff !important;
-      stroke: none !important;
-    }
-    .flatpickr-weekday {
-      color: #a0a0a0 !important;
-      background-color: #282828 !important;
-    }
-    .flatpickr-day {
-      color: #e0e0e0 !important;
-      background-color: #282828 !important;
-    }
-    .flatpickr-day.prevMonthDay,
-    .flatpickr-day.nextMonthDay {
-      color: #555 !important;
-    }
-    .flatpickr-day.today {
-      border-color: #777 !important;
-      color: #fff !important;
-    }
-    .flatpickr-day.today:hover {
-      background-color: #3a3a3a !important;
-    }
-    .flatpickr-day.selected,
-    .flatpickr-day.startRange,
-    .flatpickr-day.endRange {
-      background: #4a4a4a !important;
-      border-color: #4a4a4a !important;
-      color: #fff !important;
-    }
-    #match-list {
-      margin-top: 2em;
-      width: 520px;
-    }
-    .match {
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 8px;
-      background-color: #fafafa;
-      margin-bottom: 10px;
-    }
-    .match a {
-      color: #0078ff;
-      text-decoration: none;
-    }
-    .match a:hover {
-      text-decoration: underline;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #ffffff;
+        color: #000;
+        padding: 5em;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .flatpickr-calendar { background-color: #282828 !important; border: 1px solid #333 !important; border-radius: 8px !important; box-shadow: 0 3px 8px rgba(0,0,0,0.4) !important; left: 50% !important; transform: translateX(-50%) !important; top: calc(100% + 10px) !important; position: absolute !important; z-index: 9999 !important; }
+      .flatpickr-months, .flatpickr-month, .flatpickr-weekdays { background-color: #282828 !important; border: none !important; }
+      .flatpickr-current-month { color: #fff !important; }
+      .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month .numInput.cur-year { background: #282828 !important; color: #fff !important; font-weight: bold !important; border: none !important; }
+      .flatpickr-weekdaycontainer span, .flatpickr-weekday { color: #a0a0a0 !important; background: #282828 !important; }
+      .flatpickr-weekdays { border-bottom: 1px solid #333 !important; }
+      .flatpickr-day { color: #e0e0e0 !important; background: #282828 !important; }
+      .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #555 !important; }
+      .flatpickr-day.today { border-color: #777 !important; color: #fff !important; }
+      .flatpickr-day.today:hover { background-color: #3a3a3a !important; }
+      .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: #4a4a4a !important; border-color: #4a4a4a !important; color: #fff !important; }
+      .flatpickr-prev-month svg, .flatpickr-next-month svg { fill: #fff !important; stroke: none !important; }
+      .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill: #aaa !important; }
+      .flatpickr-monthDropdown-months option { background: #282828 !important; color: #fff !important; }
+      .flatpickr-monthDropdown-months option:hover, .flatpickr-monthDropdown-months option:checked { background: #3a3a3a !important; color: #fff !important; }
+      
+      /* CSS TAMBAHAN UNTUK GAYA FIGMA */
+      .team { width: 40%; }
+      .team.left { text-align: right; }
+      .team.right { text-align: left; }
+    </style>
 </head>
 <body>
-  <div class="calendar-header">
-    <button id="prev-day">&#x276E;</button>
-    <div id="date-display" class="date-display"></div>
-    <button id="next-day">&#x276F;</button>
-    <input type="text" id="datepicker" style="display: none" />
-  </div>
-  <div id="match-list"></div>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const dateDisplay = document.getElementById("date-display");
-      const prevBtn = document.getElementById("prev-day");
-      const nextBtn = document.getElementById("next-day");
-      const matchListDiv = document.getElementById("match-list");
-      let currentDate = new Date();
-      const fp = flatpickr("#datepicker", {
-        dateFormat: "Y-m-d",
-        defaultDate: currentDate,
-        appendTo: document.querySelector(".calendar-header"),
-        onChange: function (selectedDates) {
-          if (selectedDates.length > 0) {
-            currentDate = selectedDates[0];
-            updateDisplay();
-            loadMatches();
-          }
-        },
-      });
-      function formatDate(date) {
-        const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
-        const day = date.getDate();
-        const month = date.toLocaleDateString("en-US", { month: "long" });
-        const year = date.getFullYear();
-        return `${weekday}, ${day} ${month} ${year}`;
-      }
-      function updateDisplay() {
-        dateDisplay.textContent = formatDate(currentDate);
-      }
-      function loadMatches() {
-        const dateStr = currentDate.toISOString().split("T")[0];
-        fetch(`/kalender/api/get_matches/?date=${dateStr}`)
-          .then((response) => response.json())
-          .then((data) => {
-            matchListDiv.innerHTML = "";
-            data.matches.forEach((match) => {
-              const matchHTML = `
-                <div class="match">
-                  <p>
-                    <strong>${match.team_1} vs ${match.team_2}</strong><br>
-                    <span>Waktu: ${match.start_time}</span>
-                  </p>
-                  <a href="/kalender/export/${match.id}/">Tambah ke Kalender</a>
+    <div id="calendar-header" class="flex items-center justify-center bg-[#282828] rounded-xl px-8 py-3 w-[850px] shadow-md relative">
+      <button id="prev-day" class="w-[38px] h-[38px] border border-gray-500 rounded-full text-gray-300 hover:bg-[#3a3a3a] hover:border-gray-400 transition">&lt;</button>
+      <div id="date-display" class="flex-1 text-center font-semibold text-[17px] text-gray-200 tracking-wide cursor-pointer"></div>
+      <button id="next-day" class="w-[38px] h-[38px] border border-gray-500 rounded-full text-gray-300 hover:bg-[#3a3a3a] hover:border-gray-400 transition">&gt;</button>
+      <input type="text" id="datepicker" class="hidden" />
+    </div>
+
+    <div id="schedule-container" class="mt-8 w-full max-w-3xl mx-auto">
+      {% if user.is_staff %}
+      <div class="text-center mb-8">
+          <a href="{% url 'kalender:add_schedule' %}" 
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition">
+              + Add Schedule
+          </a>
+      </div>
+      {% endif %}
+
+        <div class="flex flex-col gap-4">
+            {% for jadwal in matches %}
+            <div class="bg-gray-100 rounded-lg p-5">
+                <div class="flex items-center justify-between">
+                    <div class="team left flex items-center justify-end gap-4">
+                        <span class="font-bold text-lg text-black">{{ jadwal.team_1 }}</span>
+                        <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div class="text-center">
+                        <span class="font-bold text-gray-800">{{ jadwal.time|time:"H:i" }}</span>
+                    </div>
+                    <div class="team right flex items-center justify-start gap-4">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                        <span class="font-bold text-lg text-black">{{ jadwal.team_2 }}</span>
+                    </div>
                 </div>
-              `;
-              matchListDiv.innerHTML += matchHTML;
+            </div>
+            {% empty %}
+                <p class='text-center text-gray-500 mt-8'>Tidak ada jadwal pertandingan untuk hari ini.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const dateDisplay = document.getElementById("date-display");
+        const prevBtn = document.getElementById("prev-day");
+        const nextBtn = document.getElementById("next-day");
+        const scheduleContainer = document.getElementById("schedule-container");
+        const calendarHeader = document.getElementById("calendar-header");
+        let currentDate = new Date();
+
+        const fp = flatpickr("#datepicker", {
+          dateFormat: "Y-m-d",
+          defaultDate: currentDate,
+          appendTo: calendarHeader,
+          onChange: function (selectedDates) {
+            if (selectedDates.length > 0) {
+              currentDate = selectedDates[0];
+              updateDisplay();
+              loadMatches();
+            }
+          },
+        });
+
+        function formatDate(date) {
+          const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+          const day = date.getDate();
+          const month = date.toLocaleDateString("en-US", { month: "long" });
+          const year = date.getFullYear();
+          return `${weekday}, ${day} ${month} ${year}`;
+        }
+
+        function updateDisplay() {
+          dateDisplay.textContent = formatDate(currentDate);
+        }
+
+        function loadMatches() {
+          const dateStr = currentDate.toISOString().split("T")[0];
+          fetch(`/kalender/api/get_matches/?date=${dateStr}`)
+            .then((response) => response.json())
+            .then((data) => {
+              // Kita perlu membuat ulang bagian ini agar sesuai dengan struktur Django
+              // Namun untuk sekarang, kita biarkan agar tidak mengubah kode asli Anda
+              // Idealnya, kode di bawah ini akan menggantikan loop Django di atas
+              const matchListDiv = scheduleContainer.querySelector('.flex.flex-col');
+              matchListDiv.innerHTML = "";
+              if (data.matches.length === 0) {
+                  matchListDiv.innerHTML = "<p class='text-center text-gray-500 mt-8'>Tidak ada jadwal pertandingan untuk tanggal ini.</p>";
+                  return;
+              }
+              data.matches.forEach((match) => {
+                const matchHTML = `
+                  <div class="bg-gray-100 rounded-lg p-5">
+                    <div class="flex items-center justify-between">
+                      <div class="team left flex items-center justify-end gap-4">
+                        <span class="font-bold text-lg text-black">${match.team_1}</span>
+                        <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                      </div>
+                      <div class="text-center">
+                        <span class="font-bold text-gray-800">${match.start_time}</span>
+                      </div>
+                      <div class="team right flex items-center justify-start gap-4">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                        <span class="font-bold text-lg text-black">${match.team_2}</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                matchListDiv.innerHTML += matchHTML;
+              });
             });
-          });
-      }
-      prevBtn.addEventListener("click", () => {
-        currentDate.setDate(currentDate.getDate() - 1);
-        fp.setDate(currentDate);
+        }
+
+        prevBtn.addEventListener("click", () => {
+          currentDate.setDate(currentDate.getDate() - 1);
+          fp.setDate(currentDate);
+          updateDisplay();
+          loadMatches();
+        });
+
+        nextBtn.addEventListener("click", () => {
+          currentDate.setDate(currentDate.getDate() + 1);
+          fp.setDate(currentDate);
+          updateDisplay();
+          loadMatches();
+        });
+
+        dateDisplay.addEventListener("click", () => {
+          fp.open();
+        });
+
         updateDisplay();
-        loadMatches();
+        // Pemanggilan loadMatches() di awal tidak diperlukan karena Django sudah mengisi data awal
       });
-      nextBtn.addEventListener("click", () => {
-        currentDate.setDate(currentDate.getDate() + 1);
-        fp.setDate(currentDate);
-        updateDisplay();
-        loadMatches();
-      });
-      dateDisplay.addEventListener("click", () => {
-        fp.open();
-      });
-      updateDisplay();
-      loadMatches();
-    });
-  </script>
+    </script>
 </body>
 </html>
