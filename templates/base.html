@@ -28,7 +28,10 @@
         }
     </script>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="{% static 'css/global.css' %}">
+
+    {% block extra_head %}{% endblock extra_head %}
 </head>
 <body class="bg-background text-foreground">
     
@@ -38,6 +41,8 @@
         {% block content %}{% endblock %}
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>
