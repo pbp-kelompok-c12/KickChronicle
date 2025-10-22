@@ -15,33 +15,31 @@
     <!-- Main Container for Video and Details -->
     <div class="bg-white rounded-lg overflow-hidden shadow-lg border border-gray-200">
 
-      <!-- Video Player Section -->
-      <div class="bg-black">
-        {% if highlight.is_embeddable %}
-          {% video highlight.url '100% x 100%' %}
-        {% else %}
-          <div class="aspect-[16/9]">
+      <!-- Video Player Section - Always Manual Iframe -->
+      <div class="bg-black"> 
+        {% video highlight.url as my_video %}
+          <div class="aspect-[16/9] relative">
             <iframe 
-              src="{{ highlight.url }}" 
-              class="w-full h-full"
-              style='border:none;' 
-              allowfullscreen
+              class="absolute top-0 left-0 w-full h-full"
+              
+              src="{% if highlight.is_embeddable and my_video %}{{ my_video.url }}{% else %}{{ highlight.url }}{% endif %}" 
+              
+              style="border:none;" 
+              allowfullscreen 
+              scrolling="no" 
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerpolicy="strict-origin" 
               title="{{ highlight.name }}">
             </iframe>
           </div>
-        {% endif %}
+        {% endvideo %}
       </div>
       
       <!-- Title and Actions Section -->
       <div class="p-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
-          <!-- Left Side: Title -->
           <h1 class="text-2xl font-bold text-gray-900">{{ highlight.name }}</h1>
-
-          <!-- Spacer -->
           <div class="flex-grow"></div>
-
-          <!-- Right Side: Action Buttons -->
           <div class="flex items-center space-x-2">
             <button class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md text-sm font-semibold transition-colors">
               Rate
@@ -55,7 +53,7 @@
       
       <!-- Description Section Below -->
       <div class="p-6 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Deskripsi</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Description</h2>
         <p class="text-gray-700 leading-relaxed">{{ highlight.description|linebreaksbr }}</p>
       </div>
 
@@ -75,7 +73,6 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <!-- Placeholder Row 1 -->
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Team A</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10</td>
@@ -84,7 +81,6 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">70%</td>
               </tr>
-              <!-- Placeholder Row 2 -->
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Team B</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10</td>
