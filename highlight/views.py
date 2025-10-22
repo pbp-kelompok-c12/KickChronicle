@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from highlight.models import Highlight
@@ -31,32 +31,42 @@ def show_highlight(request,id):
 
 # def rate_higlight
 
+
 def add_highlight(request):
-    form = HighlightForm(request.POST or None)
+    if (request.user.is_authenticated and request.user.is_staff):
+        form = HighlightForm(request.POST or None)
 
-    if form.is_valid() and request.method == 'POST':
-        highlight_entry = form.save(commit = False)
-        # product_entry.user = request.user
-        highlight_entry.save()
-        return redirect('highlight:show_main_page')
+        if form.is_valid() and request.method == 'POST':
+            highlight_entry = form.save(commit = False)
+            # product_entry.user = request.user
+            highlight_entry.save()
+            return redirect('highlight:show_main_page')
 
-    context = {'form': form}
-    return render(request, "add_highlight.html", context)
-
-def edit_highlight(request, id):
-    highlight = get_object_or_404(Highlight, pk=id)
-    form = HighlightForm(request.POST or None, instance=highlight)
-    if form.is_valid() and request.method == 'POST':
-        form.save()
-        return redirect('highlight:show_main_page')
+        context = {'form': form}
+        return render(request, "add_highlight.html", context)
+    else:
+        return HttpResponseForbidden("403 FORBIDDEN")
     
-    context = {
-        'form': form
-    }
+def edit_highlight(request, id):
+    if (request.user.is_authenticated and request.user.is_staff):
+        highlight = get_object_or_404(Highlight, pk=id)
+        form = HighlightForm(request.POST or None, instance=highlight)
+        if form.is_valid() and request.method == 'POST':
+            form.save()
+            return redirect('highlight:show_main_page')
+        
+        context = {
+            'form': form
+        }
 
-    return render(request, "edit_highlight.html", context)
+        return render(request, "edit_highlight.html", context)
+    else:
+        return HttpResponseForbidden("403 FORBIDDEN")
 
 def delete_highlight(request, id):
-    highlight = get_object_or_404(Highlight, pk=id)
-    highlight.delete()
-    return HttpResponseRedirect(reverse('highlight:show_main_page'))
+    if (request.user.is_authenticated and request.user.is_staff):
+        highlight = get_object_or_404(Highlight, pk=id)
+        highlight.delete()
+        return HttpResponseRedirect(reverse('highlight:show_main_page'))
+    else:
+        return HttpResponseForbidden("403 FORBIDDEN")
