@@ -1,4 +1,6 @@
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from highlight.models import Highlight
 from highlight.forms import HighlightForm
 
@@ -15,6 +17,7 @@ def show_main_page(request):
     
     context = {
         'highlight_list': highlight_list,
+        
     }
     return render(request, "highlight_main.html", context)
 
@@ -53,3 +56,7 @@ def edit_highlight(request, id):
 
     return render(request, "edit_highlight.html", context)
 
+def delete_highlight(request, id):
+    highlight = get_object_or_404(Highlight, pk=id)
+    highlight.delete()
+    return HttpResponseRedirect(reverse('highlight:show_main_page'))

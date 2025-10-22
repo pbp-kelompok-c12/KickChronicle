@@ -2,15 +2,15 @@
 {% load static %}
 
 {% block content %}
-<div class="bg-gray-50 w-full pt-16 min-h-screen">
+<div class="w-full pt-16 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <a href="{% url 'highlight:add_highlight' %}" class="inline-flex items-center px-4 py-2 bg-white text-gray-600 font-semibold outline outline-2 outline-gray-600 outline-offset-[-2px] rounded-md hover:bg-gray-600 hover:text-white transition-colors mb-4">
+    <a href="{% url 'highlight:add_highlight' %}" class="inline-flex items-center px-4 py-2 bg-gray text-gray-600 font-semibold outline outline-2 outline-gray-600 outline-offset-[-2px] rounded-md hover:bg-gray-600 hover:text-white transition-colors mb-4">
       Add Highlight
     </a>
 
    <!-- Search and Filter Section -->
-    <div class="mb-8 bg-white rounded-lg border border-gray-200 p-4">
+    <div class="mb-8 bg-gray rounded-lg border border-gray-200 p-4">
       <form method="GET" action="{% url 'highlight:show_main_page' %}" class="flex items-center gap-4">
         
         <!-- Search Input -->
@@ -21,13 +21,13 @@
               <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
             </svg>
           </div>
-          <input 
-            type="text" 
-            name="q" 
-            value="{{ request.GET.q }}"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
-            placeholder="Search highlights by name..."
-          >
+            <input
+              type="text"
+              name="q"
+              value="{{ request.GET.q }}"
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray text-black placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm" {% comment %} <-- Added text-black here {% endcomment %}
+              placeholder="Search highlights by name..."
+            >
         </div>
 
         <!-- Search Button -->
@@ -46,15 +46,8 @@
       {% empty %}
         
         <div class="col-span-1 md:col-span-2 lg:col-span-3">
-          <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <!-- <div class="w-32 h-32 mx-auto mb-4">
-              <img src="{% static 'image/no-product.png' %}" alt="No Highlights available" class="w-full h-full object-contain">
-            </div> -->
+          <div class="bg-gray rounded-lg border border-gray-200 p-12 text-center">
             <h3 class="text-lg font-medium text-gray-900 mb-2">No Highlights found</h3>
-            <!-- <p class="text-gray-500 mb-6">Be the first to add a highlight.</p>
-            <a href="{% url 'highlight:add_highlight' %}" class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors">
-              Add Highlight
-            </a> -->
           </div>
         </div>
 
