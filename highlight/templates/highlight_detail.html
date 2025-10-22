@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load embed_video_tags %}
-{% include 'pop_up_rating.html' with highlight_id=highlight.pk %}
 
 {% block content %}
+{% include 'rating_modal.html' with highlight_id=highlight.pk %}
 <div class="w-full min-h-screen">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
