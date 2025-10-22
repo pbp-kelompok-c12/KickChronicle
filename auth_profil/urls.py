@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-# Impor view bawaan Django untuk reset password
 from django.contrib.auth import views as auth_views
 from .forms import CustomSetPasswordForm
 

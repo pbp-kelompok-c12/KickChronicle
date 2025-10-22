@@ -8,8 +8,7 @@ def register_user(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
+            form.save()
             messages.success(request, "Registrasi berhasil. Selamat datang!")
             return redirect('auth_profil:login')
     else:
