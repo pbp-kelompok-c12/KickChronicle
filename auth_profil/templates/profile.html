@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
 {% block title %}Your Profile{% endblock %}
@@ -14,6 +15,7 @@
                 <div>
                     <label for="{{ edit_form.username.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">Username</label>
                     {{ edit_form.username }}
+                    <div id="error-username" class="mt-2 text-xs text-red-400"></div>
                 </div>
                 <div>
                     <label for="{{ edit_form.first_name.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">First Name</label>
@@ -64,15 +66,23 @@
 </div>
 
 <div class="max-w-4xl mx-auto px-4 py-12">
-    <div class="bg-card p-8 border border-border/50 shadow-xl rounded-2xl">
-        <div class="flex items-center gap-6">
-            <div id="profile-avatar" class="flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white">
-                {{ user.username.0|upper }}
+    <div class="bg-zinc-900 p-8 border border-border/50 shadow-xl rounded-2xl">
+        <div class="flex flex-wrap items-center gap-6">
+            <div class="flex items-center gap-6 min-w-0">
+                <div id="profile-avatar" class="flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white">
+                    {{ user.username.0|upper }}
+                </div>
+                <div>
+                    <h2 id="profile-name" class="heading-md text-foreground">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
+                    <p id="profile-email" class="text-muted-foreground mt-1">{{ user.email }}</p>
+                    <p class="text-xs text-green-400 mt-2">Member since {{ user.date_joined|date:"F Y" }}</p>
+                </div>
             </div>
-            <div>
-                <h2 id="profile-name" class="heading-md text-foreground">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
-                <p id="profile-email" class="text-muted-foreground mt-1">{{ user.email }}</p>
-                <p class="text-xs text-green-400 mt-2">Member since {{ user.date_joined|date:"F Y" }}</p>
+            <div class="ml-auto w-full sm:w-auto mt-4 sm:mt-0">
+                <div class="flex justify-start sm:justify-end gap-3">
+                    <a href="#" class="px-4 py-2 rounded-lg border border-border/50 hover:bg-gray-800/50">Favorite</a>
+                    <a href="{% url 'auth_profil:logout' %}" class="px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">Sign Out</a>
+                </div>
             </div>
         </div>
 
@@ -114,6 +124,38 @@
         </div>
     </div>
 </div>
+
+<div id="success-modal"
+     class="fixed inset-0 z-[120] hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+  <div class="w-full max-w-md bg-card p-6 border border-border/50 shadow-xl rounded-2xl relative">
+    <button id="success-modal-close"
+            class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl leading-none"
+            aria-label="Close">&times;</button>
+
+    <div class="flex items-start gap-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-600/20 border border-green-500/30">
+        <!-- check icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-foreground">Berhasil</h3>
+        <p id="success-modal-message" class="mt-1 text-muted-foreground">
+          Perubahan telah disimpan.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <button id="success-modal-ok"
+              class="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+        Oke
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -135,30 +177,70 @@ document.addEventListener('DOMContentLoaded', function () {
             editModal.classList.remove('hidden');
         });
 
-        editForm.addEventListener('submit', function(e) {
+        editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(editForm);
-            fetch(editForm.action, {
+
+            const usernameErr = document.getElementById('error-username');
+            if (usernameErr) usernameErr.textContent = '';
+
+            const submitBtn = editForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const prev = submitBtn.textContent;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(editForm.action, {
                 method: 'POST',
                 body: new URLSearchParams(formData),
-                headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken'), 'X-Requested-With': 'XMLHttpRequest' },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('profile-name').textContent = formData.get('first_name') + ' ' + formData.get('last_name');
-                    document.getElementById('profile-avatar').textContent = formData.get('username')[0].toUpperCase();
-                    const successAlert = document.getElementById('success-alert');
-                    successAlert.textContent = data.message;
-                    successAlert.classList.remove('hidden');
-                    closeEditModal();
-                    setTimeout(() => { successAlert.classList.add('hidden'); }, 5000);
-                } else {
-                    console.error('Validation errors:', data.errors);
-                    alert('An error occurred. Please check the form.');
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                });
+
+                const isJson = res.headers.get('Content-Type')?.includes('application/json');
+                const data = isJson ? await res.json() : null;
+
+                if (res.ok && data?.status === 'success') {
+                const first = (formData.get('first_name') || '').trim();
+                const last  = (formData.get('last_name')  || '').trim();
+                const uname = (formData.get('username')   || '').trim();
+                const name = (first || last) ? `${first} ${last}`.trim() : uname;
+                const navUser = document.getElementById('nav-username');
+                const navAvatar = document.getElementById('nav-avatar');
+                if (navUser)   navUser.textContent = uname || name || navUser.textContent;
+                if (navAvatar) navAvatar.textContent = (uname || name || 'U')[0].toUpperCase();
+                
+                document.getElementById('profile-name').textContent =
+                    name || document.getElementById('profile-name').textContent;
+                document.getElementById('profile-avatar').textContent =
+                    (uname || name || 'U')[0].toUpperCase();
+
+                SuccessModal.open(data.message || 'Profil berhasil diperbarui!');
+                editModal.classList.add('hidden');
+                return;
                 }
-            })
-            .catch(error => console.error('AJAX Error:', error));
+
+                if (data?.errors) {
+                if (data.errors.username && usernameErr) {
+                    usernameErr.textContent = data.errors.username.join(' ');
+                }
+                const otherErrors = Object.entries(data.errors)
+                    .filter(([k]) => k !== 'username')
+                    .flatMap(([, v]) => v);
+                if (otherErrors.length) alert(otherErrors.join('\n'));
+                return;
+                }
+
+                alert('Gagal menyimpan perubahan. Silakan coba lagi.');
+            } catch (err) {
+                console.error('AJAX Error (edit):', err);
+                alert('Terjadi kesalahan jaringan.');
+            } finally {
+                submitBtn.textContent = prev;
+                submitBtn.disabled = false;
+            }
         });
     }
 
@@ -176,37 +258,97 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelPasswordBtn.addEventListener('click', closePasswordModal);
         passwordModal.addEventListener('click', (e) => { if (e.target === passwordModal) closePasswordModal(); });
 
-        passwordForm.addEventListener('submit', function(e) {
+        passwordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(passwordForm);
-            document.querySelectorAll('[id^="error-"]').forEach(el => el.textContent = '');
 
-            fetch(passwordForm.action, {
+            ['old_password','new_password1','new_password2'].forEach(id => {
+                const el = document.getElementById(`error-${id}`);
+                if (el) el.textContent = '';
+            });
+
+            const submitBtn = passwordForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const prev = submitBtn.textContent;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(passwordForm.action, {
                 method: 'POST',
                 body: new URLSearchParams(formData),
-                headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken'), 'X-Requested-With': 'XMLHttpRequest' },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    closePasswordModal();
-                    const successAlert = document.getElementById('success-alert');
-                    successAlert.textContent = data.message;
-                    successAlert.classList.remove('hidden');
-                    setTimeout(() => { successAlert.classList.add('hidden'); }, 5000);
-                    passwordForm.reset();
-                } else {
-                    for (const [field, errors] of Object.entries(data.errors)) {
-                        const errorDiv = document.getElementById(`error-${field}`);
-                        if (errorDiv) {
-                            errorDiv.textContent = errors.join(' ');
-                        }
-                    }
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                });
+
+                const isJson = res.headers.get('Content-Type')?.includes('application/json');
+                const data = isJson ? await res.json() : null;
+
+                if (res.ok && data?.status === 'success') {
+                SuccessModal.open(data.message || 'Password berhasil diperbarui!');
+                passwordForm.reset();
+                passwordModal.classList.add('hidden');
+                return;
                 }
-            })
-            .catch(error => console.error('AJAX Error:', error));
+
+                if (data?.errors) {
+                for (const [field, errors] of Object.entries(data.errors)) {
+                    const div = document.getElementById(`error-${field}`);
+                    if (div) div.textContent = errors.join(' ');
+                }
+                return;
+                }
+
+                alert('Gagal mengubah password.');
+            } catch (err) {
+                console.error('AJAX Error (password):', err);
+                alert('Terjadi kesalahan jaringan.');
+            } finally {
+                submitBtn.textContent = prev;
+                submitBtn.disabled = false;
+            }
         });
     }
 });
+
+// === SUCCESS MODAL UTIL ===
+const SuccessModal = (() => {
+    const modal = document.getElementById('success-modal');
+    const msgEl = document.getElementById('success-modal-message');
+    const closeBtn = document.getElementById('success-modal-close');
+    const okBtn = document.getElementById('success-modal-ok');
+    let timer = null;
+
+    const open = (message = 'Berhasil diproses.') => {
+        if (!modal) return;
+        msgEl.textContent = message;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        clearTimeout(timer);
+        timer = setTimeout(close, 2500);
+        setTimeout(() => okBtn?.focus(), 50);
+    };
+
+    const close = () => {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        clearTimeout(timer);
+    };
+
+    closeBtn?.addEventListener('click', close);
+    okBtn?.addEventListener('click', close);
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (!modal.classList.contains('hidden') && e.key === 'Escape') close();
+    });
+
+    return { open, close };
+})();
+
 </script>
 {% endblock %}
