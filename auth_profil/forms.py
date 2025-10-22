@@ -33,6 +33,12 @@ class EditProfileForm(forms.ModelForm):
         model = User
         fields = ['username', 'first_name', 'last_name']
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Username ini sudah digunakan. Silakan pilih yang lain.")
+        return username
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         tailwind_classes = "w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"

@@ -20,10 +20,10 @@
                     <div class="relative">
                         <button id="user-menu-button" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                             <span class="sr-only">Open user menu</span>
-                            <div class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-semibold text-white">
+                            <div id="nav-avatar" class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-semibold text-white">
                                 {{ user.username.0|upper }}
                             </div>
-                            <span class="hidden sm:inline text-sm font-medium text-foreground">{{ user.username }}</span>
+                            <span id="nav-username" class="hidden sm:inline text-sm font-medium text-foreground">{{ user.username }}</span>
                         </button>
 
                         <div id="user-menu" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-card border border-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu">
