@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'kalender',
     'komen_like_rate',
     'tim',
+    'embed_video',
 ]
 
 MIDDLEWARE = [
