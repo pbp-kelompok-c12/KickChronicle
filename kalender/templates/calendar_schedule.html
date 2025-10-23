@@ -16,12 +16,9 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
     color: #fff !important;
   }
-  
 
-  .flatpickr-months,
-  .flatpickr-weekdays {
+  .flatpickr-months, .flatpickr-weekdays {
     background-color: #1e1e1e !important;
-    border: none !important;
   }
 
   .flatpickr-current-month {
@@ -32,8 +29,8 @@
   .flatpickr-monthDropdown-months {
     background: #1e1e1e !important;
     color: #fff !important;
-    font-weight: 600;
     border: none !important;
+    font-weight: 600;
   }
 
   .flatpickr-day {
@@ -47,25 +44,14 @@
 
   .flatpickr-day.today {
     border-color: #555 !important;
-    color: #fff !important;
     background-color: #2f2f2f !important;
+    color: #fff !important;
   }
 
-  .flatpickr-day.selected,
-  .flatpickr-day.startRange,
-  .flatpickr-day.endRange {
+  .flatpickr-day.selected {
     background: #4b6cb7 !important;
     border-color: #4b6cb7 !important;
     color: #fff !important;
-  }
-
-  .flatpickr-day.prevMonthDay,
-  .flatpickr-day.nextMonthDay {
-    color: #555 !important;
-  }
-
-  .flatpickr-weekday {
-    color: #aaa !important;
   }
 
   .flatpickr-prev-month svg,
@@ -75,95 +61,123 @@
 
   .flatpickr-prev-month:hover svg,
   .flatpickr-next-month:hover svg {
-    fill: #aaa !important;
+    fill: #ccc !important;
+  }
+
+  .flatpickr-calendar.open {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-top: 50px !important;
   }
 
   #calendar-header {
     background-color: #282828;
   }
 
-  .team { width: 40%; }
-  .team.left { text-align: right; }
-  .team.right { text-align: left; }
+  #match-list img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+  }
 
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    text-align: center;
+    gap: 6rem;
+  }
+
+  .team-name {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: white;
+    max-width: 120px;
     white-space: nowrap;
-    border: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .flatpickr-calendar.open {
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    margin-top: 50px !important; 
+  .match-time {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.25rem;
+    min-width: 80px;
   }
 
+  @media (max-width: 640px) {
+    .match-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .match-grid > div {
+      justify-content: center !important;
+    }
+  }
 </style>
 {% endblock extra_head %}
 
 {% block content %}
 <div class="w-full max-w-4xl mx-auto py-8 px-4">
-    <div id="calendar-header" class="flex items-center justify-center bg-[#282828] rounded-xl px-6 py-3 shadow-md mx-auto relative mb-8">
-      <button id="prev-day" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-300 hover:bg-[#3a3a3a] transition">&lt;</button>
-      <div id="date-display" class="flex-1 text-center font-semibold text-lg text-gray-200 tracking-wide cursor-pointer"></div>
-      <button id="next-day" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-300 hover:bg-[#3a3a3a] transition">&gt;</button>
-      <input type="text" id="datepicker" class="sr-only" aria-hidden="true" />
-    </div>
+  <div id="calendar-header" class="flex items-center justify-center bg-[#282828] rounded-xl px-6 py-3 shadow-md mx-auto relative mb-8">
+    <button id="prev-day" class="w-9 h-9 flex items-center justify-center rounded-full text-white hover:bg-[#3a3a3a] transition">&lt;</button>
+    <div id="date-display" class="flex-1 text-center font-semibold text-lg text-gray-200 tracking-wide cursor-pointer"></div>
+    <button id="next-day" class="w-9 h-9 flex items-center justify-center rounded-full text-white hover:bg-[#3a3a3a] transition">&gt;</button>
+    <input type="text" id="datepicker" class="sr-only" aria-hidden="true" />
+  </div>
 
-    {% if user.is_superuser %}
-    <div class="text-center mb-8">
-      <a href="{% url 'kalender:add_schedule' %}" 
-         class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
-        Add Schedule
-      </a>
-    </div>
-    {% endif %}
+  {% if user.is_superuser %}
+  <div class="text-center mb-8">
+    <a href="{% url 'kalender:add_schedule' %}"
+       class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
+      Add Schedule
+    </a>
+  </div>
+  {% endif %}
 
-    <div id="match-list" class="flex flex-col gap-4">
-      {% for jadwal in matches %}
-        {% include "card_schedule.html" %}
-      {% empty %}
-        <p class='text-center text-gray-400 mt-8'>There are no matches scheduled for today</p>
-      {% endfor %}
-    </div>
+  <div id="match-list" class="flex flex-col gap-4">
+    {% for jadwal in matches %}
+      {% include "card_schedule.html" %}
+    {% empty %}
+      <p class='text-center text-gray-400 mt-8'>There are no matches scheduled for today</p>
+    {% endfor %}
+  </div>
 </div>
 
 <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
-    <div class="bg-[#1e1e1e] rounded-lg shadow-xl p-8 max-w-sm w-full border border-gray-700">
-        <h3 class="text-xl font-bold text-white mb-4">Confirm Deletion</h3>
-        <p class="text-gray-400 mb-6">Are you sure you want to delete this schedule?</p>
-        <div class="flex justify-end gap-4">
-            <button id="cancel-delete-btn" class="px-6 py-2 rounded-md font-medium text-gray-300 hover:bg-gray-700 transition">
-                Cancel
-            </button>
-            <button id="confirm-delete-btn" class="px-6 py-2 rounded-md font-medium bg-red-600 text-white hover:bg-red-700 transition">
-                Delete
-            </button>
-        </div>
+  <div class="bg-[#1e1e1e] rounded-lg shadow-xl p-8 max-w-sm w-full border border-gray-700">
+    <h3 class="text-xl font-bold text-white mb-4">Confirm Deletion</h3>
+    <p class="text-gray-400 mb-6">Are you sure you want to delete this schedule?</p>
+    <div class="flex justify-end gap-4">
+      <button id="cancel-delete-btn" class="px-6 py-2 rounded-md font-medium text-gray-300 hover:bg-gray-700 transition">
+        Cancel
+      </button>
+      <button id="confirm-delete-btn" class="px-6 py-2 rounded-md font-medium bg-red-600 text-white hover:bg-red-700 transition">
+        Delete
+      </button>
     </div>
+  </div>
 </div>
 {% endblock content %}
 
 {% block scripts %}
+<script>
+  const IS_ADMIN = "{{ user.is_staff|yesno:'true,false' }}" === "true";
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+          break;
         }
+      }
     }
     return cookieValue;
   }
@@ -184,7 +198,7 @@
     const fp = flatpickr(dateInput, {
       dateFormat: "Y-m-d",
       defaultDate: currentDate,
-      onChange: function (selectedDates) {
+      onChange: (selectedDates) => {
         if (selectedDates.length > 0) {
           currentDate = selectedDates[0];
           updateDisplay();
@@ -194,13 +208,12 @@
     });
 
     function formatDate(date) {
-      const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
-      const month = date.toLocaleDateString("en-US", { month: "long" });
-      const day = date.getDate();
-      const year = date.getFullYear();
-
-      return `${weekday}, ${month} ${day} ${year}`; 
+      const options = { weekday: "long", month: "long", day: "numeric", year: "numeric" };
+      let formatted = date.toLocaleDateString("en-US", options);
+      formatted = formatted.replace(/, (\d{4})$/, " $1");
+      return formatted;
     }
+
 
     function updateDisplay() {
       dateDisplay.textContent = formatDate(currentDate);
@@ -208,50 +221,69 @@
     }
 
     function getLocalDateString(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); 
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
 
     function loadMatches() {
-      const dateStr = getLocalDateString(currentDate); 
-      
+      const dateStr = getLocalDateString(currentDate);
       fetch(`/kalender/api/get_matches/?date=${dateStr}`)
-        .then((response) => response.json())
-        .then((data) => {
+        .then(res => res.json())
+        .then(data => {
           matchListDiv.innerHTML = "";
           if (!data.matches || data.matches.length === 0) {
             matchListDiv.innerHTML = "<p class='text-center text-gray-400 mt-8'>There are no matches scheduled for this date</p>";
             return;
           }
-          data.matches.forEach((match) => {
-            const team1Logo = match.team_1_logo ? `<img src="${match.team_1_logo}" alt="${match.team_1}" class="w-12 h-12 rounded-full object-cover">` : '<div class="w-12 h-12 bg-gray-600 rounded-full"></div>';
-            const team2Logo = match.team_2_logo ? `<img src="${match.team_2_logo}" alt="${match.team_2}" class="w-12 h-12 rounded-full object-cover">` : '<div class="w-12 h-12 bg-gray-600 rounded-full"></div>';
+
+          data.matches.forEach(match => {
+            const team1Logo = match.team_1_logo
+              ? `<img src="${match.team_1_logo}" alt="${match.team_1}" class="rounded-full">`
+              : `<div class="w-12 h-12 bg-gray-600 rounded-full"></div>`;
+            const team2Logo = match.team_2_logo
+              ? `<img src="${match.team_2_logo}" alt="${match.team_2}" class="rounded-full">`
+              : `<div class="w-12 h-12 bg-gray-600 rounded-full"></div>`;
+
             const editUrl = `/kalender/edit/${match.id}/`;
 
             const matchHTML = `
-              <div class="bg-[#282828] rounded-lg p-5 shadow-md flex items-center justify-between" id="schedule-card-${match.id}">
-                <div class="flex items-center justify-between w-full">
-                  <div class="flex items-center gap-4">
-                    <a href="${editUrl}" class="edit-btn bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">Edit</a>
-                    <div class="flex items-center gap-3 ml-10">
-                      <span class="font-bold text-lg text-white">${match.team_1}</span>
-                      ${team1Logo}
-                    </div>
+              <div class="bg-[#282828] rounded-lg p-5 shadow-md relative flex items-center justify-between" id="schedule-card-${match.id}">
+                ${IS_ADMIN ? `
+                  <a href="${editUrl}" 
+                    class="bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition">
+                    Edit
+                  </a>
+                ` : ""}
+
+                <div class="grid grid-cols-3 items-center justify-items-center flex-1">
+                  <div class="flex items-center justify-end gap-2 w-full">
+                    <span class="team-name text-white font-semibold text-lg">${match.team_1}</span>
+                    ${team1Logo.replace('class="rounded-full"', 'class="rounded-full ml-5"')}
                   </div>
-                  <div class="text-center">
-                    <span class="font-bold text-white">${match.start_time}</span>
+
+
+                  <div class="text-white font-bold text-xl text-center w-full">
+                    ${match.start_time}
                   </div>
-                  <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-3 mr-10">
-                      ${team2Logo}
-                      <span class="font-bold text-lg text-white">${match.team_2}</span>
-                    </div>
-                    <button data-id="${match.id}" class="delete-btn bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">Delete</button>
+
+                  <div class="flex items-center justify-start gap-2 w-full">
+                    ${team2Logo.replace('class="rounded-full"', 'class="rounded-full mr-5"')}
+                    <span class="team-name text-white font-semibold text-lg">${match.team_2}</span>
                   </div>
                 </div>
-              </div>`;
+
+                ${IS_ADMIN ? `
+                  <button data-id="${match.id}" 
+                    class="delete-btn bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition">
+                    Delete
+                  </button>
+                ` : ""}
+              </div>
+            `;
+
+
             matchListDiv.innerHTML += matchHTML;
           });
         });
@@ -269,45 +301,37 @@
       loadMatches();
     });
 
-    dateDisplay.addEventListener("click", () => {
-      fp.open();
+    dateDisplay.addEventListener("click", () => fp.open());
+
+    matchListDiv.addEventListener("click", e => {
+      const btn = e.target.closest(".delete-btn");
+      if (btn) {
+        scheduleIdToDelete = btn.dataset.id;
+        deleteModal.classList.remove("hidden");
+      }
     });
 
-    matchListDiv.addEventListener('click', function(event) {
-        const deleteButton = event.target.closest('.delete-btn');
-        if (deleteButton) {
-            scheduleIdToDelete = deleteButton.dataset.id;
-            deleteModal.classList.remove('hidden');
-        }
+    cancelDeleteBtn.addEventListener("click", () => {
+      deleteModal.classList.add("hidden");
+      scheduleIdToDelete = null;
     });
 
-    cancelDeleteBtn.addEventListener('click', () => {
-        deleteModal.classList.add('hidden');
-        scheduleIdToDelete = null;
+    confirmDeleteBtn.addEventListener("click", async () => {
+      if (!scheduleIdToDelete) return;
+      const res = await fetch(`/kalender/delete/${scheduleIdToDelete}/`, {
+        method: "DELETE",
+        headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById(`schedule-card-${scheduleIdToDelete}`).remove();
+      }
+      deleteModal.classList.add("hidden");
+      scheduleIdToDelete = null;
     });
 
-    confirmDeleteBtn.addEventListener('click', async () => {
-        if (!scheduleIdToDelete) return;
-        try {
-            const response = await fetch(`/kalender/delete/${scheduleIdToDelete}/`, {
-                method: "DELETE",
-                headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
-            });
-            const data = await response.json();
-            if (data.success) {
-                document.getElementById(`schedule-card-${scheduleIdToDelete}`).remove();
-            } else {
-                alert("Failed to delete schedule.");
-            }
-        } catch {
-            alert("Error deleting schedule.");
-        } finally {
-            deleteModal.classList.add('hidden');
-            scheduleIdToDelete = null;
-        }
-    });
-    
     updateDisplay();
+    loadMatches();
   });
 </script>
 {% endblock scripts %}

@@ -26,17 +26,33 @@
               {{ field.label }}
             </label>
             <div class="w-full">
-              <input
-                type="{{ field.field.widget.input_type }}"
-                name="{{ field.name }}"
-                id="{{ field.id_for_label }}"
-                value="{{ field.value|default_if_none:'' }}"
-                style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
-              >
+              {% if field.field.widget.input_type == "date" %}
+                <input
+                  type="date"
+                  name="{{ field.name }}"
+                  id="{{ field.id_for_label }}"
+                  value="{{ field.value|date:'Y-m-d' }}"
+                  class="custom-input"
+                >
+              {% elif field.field.widget.input_type == "time" %}
+                <input
+                  type="time"
+                  name="{{ field.name }}"
+                  id="{{ field.id_for_label }}"
+                  value="{{ field.value|time:'H:i' }}"
+                  class="custom-input"
+                >
+              {% else %}
+                <input
+                  type="{{ field.field.widget.input_type|default:'text' }}"
+                  name="{{ field.name }}"
+                  id="{{ field.id_for_label }}"
+                  value="{{ field.value|default_if_none:'' }}"
+                  class="custom-input"
+                  autocomplete="off"
+                >
+              {% endif %}
             </div>
-            {% if field.help_text %}
-              <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
-            {% endif %}
             <p class="error text-red-500 text-sm mt-1" id="error-{{ field.name }}"></p>
           </div>
         {% endfor %}
@@ -44,7 +60,7 @@
         <div id="ajax-message" class="text-center text-sm mt-2"></div>
 
         <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700">
-          <a href="{% url 'kalender:schedule_index' %}"
+          <a href="{% url 'kalender:schedule_index' %}" 
              class="order-2 sm:order-1 px-6 py-3 rounded-md font-medium text-center border border-white hover:bg-gray-800 transition">
             Cancel
           </a>
@@ -65,6 +81,30 @@ document.addEventListener("DOMContentLoaded", function() {
   const form = document.getElementById("add-schedule-form");
   const messageBox = document.getElementById("ajax-message");
 
+  const style = document.createElement('style');
+  style.textContent = `
+    .custom-input {
+      background-color: #1a1a1a !important;
+      color: #fff !important;
+      border: 1px solid #333 !important;
+      border-radius: 6px;
+      padding: 8px 12px;
+      width: 100%;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .custom-input:focus {
+      outline: none !important;
+      background-color: #222 !important;
+      color: #fff !important;
+      border-color: #666 !important;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+  `;
+  document.head.appendChild(style);
+
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -79,6 +119,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     return cookieValue;
   }
+
   const csrftoken = getCookie('csrftoken');
 
   form.addEventListener("submit", async function(e) {
@@ -116,7 +157,6 @@ document.addEventListener("DOMContentLoaded", function() {
           }
         }
       }
-
     } catch (error) {
       messageBox.textContent = "Something went wrong. Please try again.";
       messageBox.className = "text-center text-red-500 text-sm mt-2";
