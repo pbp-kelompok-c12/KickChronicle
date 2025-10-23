@@ -33,3 +33,9 @@ class ScheduleForm(forms.ModelForm):
                 'style': 'resize: vertical;'
             }),
         }
+
+class CsvUploadForm(forms.Form):
+    csv_file = forms.FileField(
+        label='Choose CSV File',
+        widget=forms.FileInput(attrs={'class': 'w-full rounded-md border-gray-800'})
+    )

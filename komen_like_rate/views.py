@@ -11,19 +11,7 @@ from highlight.models import Highlight
 from django.http import JsonResponse, HttpResponseForbidden
 
 
-@login_required
-def rate_highlight(request, highlight_id):
-    highlight = get_object_or_404(Highlight, id=highlight_id)
-    if request.method == 'POST':
-        form = RatingForm(request.POST)
-        if form.is_valid():
-            value = form.cleaned_data['value']
-            rating, created = Rating.objects.update_or_create(
-                user=request.user, highlight=highlight,
-                defaults={'value': value}
-            )
-            return redirect('highlight:detail', pk=highlight_id)
-    return HttpResponseBadRequest("Invalid rating")  
+ 
 
 @login_required
 def add_comment(request, highlight_id):
@@ -62,6 +50,7 @@ def toggle_favorite(request, highlight_id):
         favorited = False
 
     return JsonResponse({"status": "ok", "action": action, "favorited": favorited})
+
 @login_required
 @require_POST
 def submit_rating(request):
@@ -112,3 +101,14 @@ def delete_comment(request, comment_id):
         return HttpResponseForbidden("Tidak boleh menghapus komentar orang lain.")
     comment.delete()
     return JsonResponse({"status": "ok", "id": comment_id})
+
+@login_required
+def favorite_list(request):
+    favorites = Favorite.objects.filter(
+        user=request.user,
+        highlight__isnull=False  # hanya favorit yang masih punya highlight
+    ).select_related('highlight')
+
+    return render(request, 'komen_like_rate/favorites.html', {
+        'favorites': favorites
+    })

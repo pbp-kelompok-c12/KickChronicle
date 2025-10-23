@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import CSV Schedule{% endblock title %}
+
+{% block content %}
+<div class="w-full max-w-lg mx-auto py-8 px-4">
+    <div class="mb-4">
+        <a href="{% url 'kalender:schedule_index' %}" class="text-gray-400 hover:text-gray-200 font-medium transition-colors">
+            ← Back to Schedule
+        </a>
+    </div>
+
+    <div class="bg-[#282828] rounded-xl shadow-md border border-gray-700">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">Import Schedule from CSV</h2>
+
+            <div class="bg-[#1e1e1e] p-4 rounded-lg mb-6 border border-gray-600">
+                <p class="text-gray-300 font-semibold mb-2">CSV File Format Instructions:</p>
+                <p class="text-gray-400 text-sm">Your file must have a header row and the following column order:</p>
+                <code class="block text-white-300 mt-2 p-2 bg-gray-700 rounded-md text-xs whitespace-normal">
+                    team_1, team_2, date (YYYY-MM-DD), time (HH:MM), description, team_1_logo (URL), team_2_logo (URL)
+                </code>
+                <p class="text-gray-400 text-xs mt-2">Ensure all 7 columns are present and the logo URLs are filled correctly.</p>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <p class="block text-sm font-medium text-gray-300 mb-2">
+                        {{ form.csv_file.label }}
+                    </p>
+                    
+                    <div class="flex items-center gap-x-4">
+                        <label for="{{ form.csv_file.id_for_label }}" 
+                               class="inline-block bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md cursor-pointer transition border border-gray-500">
+                            Choose File
+                        </label>
+                        <span id="file-name" class="text-gray-400 text-sm">No file chosen</span>
+                    </div>
+                    
+                    <input type="file" name="{{ form.csv_file.name }}" id="{{ form.csv_file.id_for_label }}" class="hidden">
+
+                    {% if form.csv_file.errors %}
+                        {% for error in form.csv_file.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-2">{{ form.csv_file.help_text }}</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700">
+                    <a href="{% url 'kalender:schedule_index' %}" 
+                       class="order-2 sm:order-1 px-6 py-3 rounded-md font-medium text-center border border-white hover:bg-gray-800 transition">
+                       Cancel
+                    </a>
+                    <button type="submit"
+                       class="order-1 sm:order-2 flex-1 px-6 py-3 rounded-md font-medium border border-white hover:bg-gray-800 text-white transition">
+                       Import Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('{{ form.csv_file.id_for_label }}');
+    const fileNameSpan = document.getElementById('file-name');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileNameSpan.textContent = this.files[0].name;
+            } else {
+                fileNameSpan.textContent = 'No file chosen';
+            }
+        });
+    }
+});
+</script>
+{% endblock scripts %}

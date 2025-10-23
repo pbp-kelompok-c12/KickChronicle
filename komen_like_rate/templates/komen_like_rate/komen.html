@@ -67,6 +67,33 @@
   </div>
 </div>
 
+<!-- ✅ MODAL NOTIFIKASI -->
+<div id="modalAlert" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+    <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 mb-2">Pemberitahuan</h3>
+    <p id="modalMessage" class="text-gray-700 mb-5">Pesan notifikasi di sini.</p>
+    <button id="modalClose" class="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
+      Oke
+    </button>
+  </div>
+</div>
+
+<!-- ✅ MODAL KONFIRMASI HAPUS -->
+<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Konfirmasi</h3>
+    <p id="confirmMessage" class="text-gray-700 mb-5">Apakah kamu yakin ingin menghapus komentar ini?</p>
+    <div class="flex justify-center gap-3">
+      <button id="cancelDelete" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition">
+        Batal
+      </button>
+      <button id="confirmDelete" class="px-5 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition">
+        Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('commentForm');
@@ -74,8 +101,35 @@ document.addEventListener('DOMContentLoaded', function () {
   const list = document.getElementById('commentList');
   const countEl = document.getElementById('commentCount');
   const sendBtn = document.getElementById('sendBtn');
-
   const getCsrf = () => document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // ✅ modal notifikasi
+  const modal = document.getElementById('modalAlert');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalClose = document.getElementById('modalClose');
+  function showModal(title, message) {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  modalClose.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  });
+
+  // ✅ modal konfirmasi hapus
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmDelete = document.getElementById('confirmDelete');
+  const cancelDelete = document.getElementById('cancelDelete');
+  let pendingDelete = null;
+
+  cancelDelete.addEventListener('click', () => {
+    confirmModal.classList.add('hidden');
+    confirmModal.classList.remove('flex');
+    pendingDelete = null;
+  });
 
   function autosize() {
     textarea.style.height = 'auto';
@@ -106,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Kirim komentar (AJAX)
+  // Kirim komentar
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const content = textarea.value.trim();
@@ -127,11 +181,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const data = await res.json();
       if (data.error) {
-        alert('Komentar gagal dikirim.');
+        showModal('Gagal', 'Komentar gagal dikirim.');
         return;
       }
 
-      // Buat card komentar baru (punya tombol Hapus karena milik user sendiri)
       const wrap = document.createElement('div');
       wrap.id = 'c-' + (data.id || ('new-' + Date.now()));
       wrap.className = 'p-4 bg-white border border-gray-200 rounded-xl';
@@ -157,31 +210,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
       textarea.value = '';
       autosize();
-
-      // update counter
       countEl.textContent = String(parseInt(countEl.textContent || '0', 10) + 1);
       updateEmptyState();
     } catch (err) {
-      console.error(err);
-      alert('Terjadi kesalahan.');
+      showModal('Kesalahan', 'Terjadi kesalahan.');
     } finally {
       sendBtn.disabled = false;
       sendBtn.classList.remove('opacity-60', 'cursor-not-allowed');
     }
   });
 
-
+  // Hapus komentar pakai modal konfirmasi
   list.addEventListener('click', async (e) => {
     const btn = e.target.closest('.delete-comment');
     if (!btn) return;
 
     const id = btn.dataset.id;
-    if (!confirm('Hapus komentar ini?')) return;
+    pendingDelete = { id, btn };
+    confirmModal.classList.remove('hidden');
+    confirmModal.classList.add('flex');
+  });
+
+  confirmDelete.addEventListener('click', async () => {
+    if (!pendingDelete) return;
+    const { id, btn } = pendingDelete;
+    confirmModal.classList.add('hidden');
+    confirmModal.classList.remove('flex');
 
     if (!id) {
       btn.closest('[id^="c-"]')?.remove();
       countEl.textContent = String(Math.max(0, parseInt(countEl.textContent || '1', 10) - 1));
       updateEmptyState();
+      pendingDelete = null;
       return;
     }
 
@@ -196,11 +256,12 @@ document.addEventListener('DOMContentLoaded', function () {
         countEl.textContent = String(Math.max(0, parseInt(countEl.textContent || '1', 10) - 1));
         updateEmptyState();
       } else {
-        alert('Gagal menghapus komentar.');
+        showModal('Gagal', 'Gagal menghapus komentar.');
       }
     } catch (err) {
-      console.error(err);
-      alert('Terjadi kesalahan saat menghapus.');
+      showModal('Kesalahan', 'Terjadi kesalahan saat menghapus.');
+    } finally {
+      pendingDelete = null;
     }
   });
 
