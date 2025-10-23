@@ -11,9 +11,9 @@
                 </a>
                 <div class="hidden md:flex items-center gap-2">
                     <a href="/" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Highlight</a>
-                    <a href="#" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Schedule</a>
-                    <a href="#" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Top Rated</a>
-                    <a href="#" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Team</a>
+                    <a href="{% url 'kalender:schedule_index' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Schedule</a>
+                    <a href="{% url 'komen_like_rate:top_rated' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Top Rated</a>
+                    <a href="{% url 'tim:standings_page' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Team</a>
                 </div>
             </div>
 
