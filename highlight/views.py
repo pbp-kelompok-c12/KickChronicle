@@ -1,11 +1,12 @@
+import csv
+import io
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from highlight.models import Highlight
-from highlight.forms import HighlightForm
-
-# kemungkinan import dari tim
-# kemungkinan import dari komen_like_rate
+from highlight.forms import HighlightForm, HiglightFormCsv
+from django.contrib import messages
+from django.db import transaction
 
 def show_main_page(request):
     query = request.GET.get('q')
@@ -28,9 +29,6 @@ def show_highlight(request,id):
     }
 
     return render(request, "highlight_detail.html", context)
-
-# def rate_higlight
-
 
 def add_highlight(request):
     if (request.user.is_authenticated and request.user.is_staff):
@@ -68,5 +66,98 @@ def delete_highlight(request, id):
         highlight = get_object_or_404(Highlight, pk=id)
         highlight.delete()
         return HttpResponseRedirect(reverse('highlight:show_main_page'))
+    else:
+        return HttpResponseForbidden("403 FORBIDDEN")
+    
+
+def add_highlights_csv(request):
+    if (request.user.is_authenticated and request.user.is_staff):
+        if request.method == 'POST':
+            form = HiglightFormCsv(request.POST, request.FILES)
+            if form.is_valid():
+                csv_file = request.FILES['csv_file']
+
+                # Check file extension
+                if not csv_file.name.endswith('.csv'):
+                    messages.error(request, 'Invalid file format. Please upload a .csv file.')
+                    return redirect('highlight:add_highlight_csv') # Adjust URL name
+
+                # try:
+                # Decode file and prepare for CSV reader
+                decoded_file = csv_file.read().decode('utf-8')
+                io_string = io.StringIO(decoded_file)
+                reader = csv.reader(io_string)
+                header = next(reader) # Skip header row
+
+                highlights_to_create = []
+                skipped_rows = []
+
+                with transaction.atomic():
+                    for row_idx, row in enumerate(reader, start=2):
+                        # try:
+                        # --- Map CSV Columns to Highlight Model Fields ---
+                        # Check if essential columns exist
+                        if len(row) < 2:
+                            skipped_rows.append(f"Row {row_idx}: Too few columns (Need at least Name and URL).")
+                            continue
+
+                        name_val = row[0].strip()
+                        url_val = row[1].strip()
+
+                        # Optional fields (check if columns exist before accessing)
+                        description_val = row[2].strip() if len(row) > 2 and row[2] else "" # Default to empty string
+                        thumbnail_url_val = row[3].strip() if len(row) > 3 and row[3] else None # Default to None
+
+                        # Basic Validation
+                        # if not name_val:
+                        #     skipped_rows.append(f"Row {row_idx}: Name is missing.")
+                        #     continue
+                        # if not url_val:
+                        #     skipped_rows.append(f"Row {row_idx}: URL is missing.")
+                        #     continue
+
+                        # Add Highlight instance to list for bulk creation
+                        highlights_to_create.append(
+                            Highlight(
+                                name=name_val,
+                                url=url_val,
+                                description=description_val,
+                                manual_thumbnail_url=thumbnail_url_val
+                                # created_at is handled automatically by the model's default
+                            )
+                        )
+                    # except IndexError:
+                    #     skipped_rows.append(f"Row {row_idx}: Error reading columns (IndexError).")
+                    #     continue
+                    # except Exception as e: # Catch other potential errors per row
+                    #     skipped_rows.append(f"Row {row_idx}: Unexpected error ({e}).")
+                    #     continue
+
+                # Bulk create highlights
+                # if highlights_to_create:
+                created_objects = Highlight.objects.bulk_create(highlights_to_create)
+                messages.success(request, f"Successfully imported {len(created_objects)} highlights.")
+                # else:
+                #     messages.info(request, "No new highlights found to import.")
+
+                # Report skipped rows
+                # if skipped_rows:
+                #     messages.warning(request, "Some rows were skipped:")
+                #     for skipped in skipped_rows[:10]:
+                #         messages.warning(request, skipped)
+                #     if len(skipped_rows) > 10:
+                #         messages.warning(request, f"...and {len(skipped_rows) - 10} more.")
+
+                # except UnicodeDecodeError:
+                #     messages.error(request, 'Error reading file. Please ensure it is UTF-8 encoded.')
+                # except csv.Error as e:
+                #     messages.error(request, f'Error processing CSV file structure: {e}')
+                # except Exception as e:
+                #     messages.error(request, f'An unexpected error occurred during import: {e}')
+
+                return redirect('highlight:add_highlight_csv')
+        else: # GET request
+            form = HiglightFormCsv()
+        return render(request, 'add_highlight_csv.html', {'form': form})
     else:
         return HttpResponseForbidden("403 FORBIDDEN")
