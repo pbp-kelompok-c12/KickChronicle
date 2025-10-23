@@ -45,9 +45,9 @@
             <button id="rateButton" class="px-3 py-2 border border-gray-500 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-semibold transition-colors">
               Rate
             </button>
-            <button class="px-3 py-2 border border-gray-500 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-semibold transition-colors">
-              Favourite
-            </button>
+              
+              {% include "komen_like_rate/favorite_button.html" %}
+
           </div>
         </div>
       </div>
@@ -98,6 +98,9 @@
           </table>
         </div>
       </div>
+          
+          {% include 'komen_like_rate/komen.html' with highlight=highlight %}
+
 
     </div>
   </div>
