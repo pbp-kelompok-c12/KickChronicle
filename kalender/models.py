@@ -8,6 +8,7 @@ class Kalender(models.Model):
     team_2_logo = models.URLField(blank=True, null=True)
     date = models.DateField()
     time = models.TimeField()
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.team_1} vs {self.team_2} on {self.date}"

@@ -114,6 +114,11 @@
       justify-content: center !important;
     }
   }
+
+  .schedule-card:hover {
+    background-color: #303030;
+    transition: background-color 0.2s ease;
+  }
 </style>
 {% endblock extra_head %}
 
@@ -214,7 +219,6 @@
       return formatted;
     }
 
-
     function updateDisplay() {
       dateDisplay.textContent = formatDate(currentDate);
       fp.setDate(currentDate, false);
@@ -247,12 +251,14 @@
               : `<div class="w-12 h-12 bg-gray-600 rounded-full"></div>`;
 
             const editUrl = `/kalender/edit/${match.id}/`;
+            const detailUrl = `/kalender/detail/${match.id}/`;
 
             const matchHTML = `
-              <div class="bg-[#282828] rounded-lg p-5 shadow-md relative flex items-center justify-between" id="schedule-card-${match.id}">
+              <div class="bg-[#282828] rounded-lg p-5 shadow-md relative flex items-center justify-between schedule-card cursor-pointer"
+                   id="schedule-card-${match.id}" data-id="${match.id}">
                 ${IS_ADMIN ? `
                   <a href="${editUrl}" 
-                    class="bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition">
+                    class="bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition relative z-10">
                     Edit
                   </a>
                 ` : ""}
@@ -262,7 +268,6 @@
                     <span class="team-name text-white font-semibold text-lg">${match.team_1}</span>
                     ${team1Logo.replace('class="rounded-full"', 'class="rounded-full ml-5"')}
                   </div>
-
 
                   <div class="text-white font-bold text-xl text-center w-full">
                     ${match.start_time}
@@ -276,15 +281,25 @@
 
                 ${IS_ADMIN ? `
                   <button data-id="${match.id}" 
-                    class="delete-btn bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition">
+                    class="delete-btn bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition relative z-10">
                     Delete
                   </button>
                 ` : ""}
               </div>
             `;
 
-
             matchListDiv.innerHTML += matchHTML;
+          });
+        })
+        .then(() => {
+          document.querySelectorAll(".schedule-card").forEach(card => {
+            card.addEventListener("click", e => {
+              const isButton = e.target.closest(".delete-btn, a");
+              if (!isButton) {
+                const id = card.dataset.id;
+                window.location.href = `/kalender/detail/${id}/`;
+              }
+            });
           });
         });
     }

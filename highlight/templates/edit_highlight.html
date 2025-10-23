@@ -23,13 +23,29 @@
               {{ field.label }}
             </label>
             <div class="w-full">
+              {% if field.field.widget.input_type == 'select' %}
+                <select 
+                  name="{{ field.name }}" 
+                  id="{{ field.id_for_label }}" 
+                  style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
+                >
+                  {% for value, text in field.field.choices %}
+                    <option value="{{ value }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ text }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
               <input
                 type="{{ field.field.widget.input_type }}"
                 name="{{ field.name }}"
                 id="{{ field.id_for_label }}"
-                value="{{ field.value|default_if_none:'' }}"
+                {% if field.name == 'created_at' %}
+                  value="{{ field.value|date:'Y-m-d H:m:s'|default_if_none:'' }}"
+                {% else %}
+                  value="{{ field.value|default_if_none:'' }}"
+                {% endif %}
                 style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
               >
+              {% endif %}
             </div>
             {% if field.help_text %}
               <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
