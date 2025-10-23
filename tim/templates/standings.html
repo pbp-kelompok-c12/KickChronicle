@@ -63,10 +63,9 @@
     </div>
 </div>
 
-{% endblock %}
+{% endblock content %}
 
 {% block scripts %}
-{{ block.super }}
 <script>
     let currentFilter = 'all';
     const container = document.getElementById('standingsContainer');
@@ -286,4 +285,4 @@
         return '';
     }
 </script>
-{% endblock %}
+{% endblock scripts %}
