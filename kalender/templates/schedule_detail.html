@@ -13,25 +13,29 @@
 
   <div class="bg-[#1e1e1e] rounded-xl shadow-lg px-10 py-10 border border-gray-700 text-center">
 
-    <div class="flex items-center justify-center gap-6 mb-8 flex-wrap">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl font-bold text-white">{{ jadwal.team_1 }}</span>
+    <div class="grid grid-cols-[1fr_140px_1fr] items-center text-center mb-8">
+      <div class="flex items-center justify-end gap-3 text-right">
+        <span class="text-xl font-bold text-white truncate">{{ jadwal.team_1 }}</span>
         {% if jadwal.team_1_logo %}
-          <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }}" class="w-12 h-12 rounded-full object-cover border border-gray-600">
+          <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }}"
+               class="w-12 h-12 rounded-full object-cover border border-gray-600">
         {% else %}
           <div class="w-12 h-12 rounded-full bg-gray-600 border border-gray-500"></div>
         {% endif %}
       </div>
 
-      <span class="text-2xl font-semibold text-gray-200">VS</span>
+      <div class="flex justify-center">
+        <span class="text-2xl font-semibold text-gray-200">VS</span>
+      </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center justify-start gap-3 text-left">
         {% if jadwal.team_2_logo %}
-          <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }}" class="w-12 h-12 rounded-full object-cover border border-gray-600">
+          <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }}"
+               class="w-12 h-12 rounded-full object-cover border border-gray-600">
         {% else %}
           <div class="w-12 h-12 rounded-full bg-gray-600 border border-gray-500"></div>
         {% endif %}
-        <span class="text-2xl font-bold text-white">{{ jadwal.team_2 }}</span>
+        <span class="text-xl font-bold text-white truncate">{{ jadwal.team_2 }}</span>
       </div>
     </div>
 
