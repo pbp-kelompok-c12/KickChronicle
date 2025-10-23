@@ -47,14 +47,10 @@
     <div class="bg-zinc-900 p-8 border border-border/50 shadow-xl rounded-2xl">
         <div class="flex flex-wrap items-center gap-6">
             <div class="flex items-center gap-6 min-w-0">
-                {% if user.profile.image and user.profile.image.name != 'default.jpg' %}
-                    <img id="profile-avatar-img" class="h-24 w-24 rounded-full object-cover"
-                        src="{{ user.profile.image.url }}" alt="Profile Picture">
+                {% if user.profile.image %}
+                    <img id="profile-avatar-img" class="h-24 w-24 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Profile Picture">
                 {% else %}
-                    <div id="profile-avatar"
-                        class="flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white">
-                    {{ user.username|slice:":1"|upper }}
-                    </div>
+                    <img id="profile-avatar-img" class="h-24 w-24 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Profile Picture">
                 {% endif %}
                 <div>
                     <h2 id="profile-name" class="heading-md text-foreground">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
@@ -151,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const openEditBtn      = document.getElementById('open-edit-modal-btn');
     const closeEditBtn     = document.getElementById('close-edit-modal-btn');
     const editProfileUrl   = "{% url 'auth_profil:edit_profile' %}";
+    const DEFAULT_AVATAR_URL = "{% static 'img/default.png' %}";
 
     const closeEditModal = () => editModal.classList.add('hidden');
 
@@ -164,10 +161,15 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
         editModal.classList.remove('hidden');
 
-        const html = await (await fetch(editProfileUrl, { credentials: 'same-origin' })).text();
-        editModalContent.innerHTML = html;
-
-        wireEditModal();
+        const res = await fetch(editProfileUrl, { credentials: 'same-origin' });
+    if (!res.ok) {
+        const text = await res.text();
+        console.error('Failed to load edit form', res.status, text);
+        alert('Gagal memuat form edit. Coba refresh halaman.');
+        return;
+    }
+    editModalContent.innerHTML = await res.text();
+    wireEditModal();
     });
 
     function wireEditModal() {
@@ -238,47 +240,35 @@ document.addEventListener('DOMContentLoaded', function () {
                     const last  = (fd.get('last_name')  || '').toString().trim();
                     const uname = (fd.get('username')   || '').toString().trim();
                     const displayName = (first || last) ? `${first} ${last}`.trim() : uname;
+
                     const nameEl = document.getElementById('profile-name');
                     if (displayName && nameEl) nameEl.textContent = displayName;
 
-                    const avatarImg    = document.getElementById('profile-avatar-img');
-                    let   avatarLetter = document.getElementById('profile-avatar');
+                    const rawUrl = data.new_image_url && data.new_image_url.trim() !== "" 
+                        ? data.new_image_url 
+                        : DEFAULT_AVATAR_URL;
+                    const url = rawUrl + (rawUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
 
-                    if (data.new_image_url && !data.new_image_url.includes('default.jpg')) {
-                        if (avatarImg) avatarImg.src = data.new_image_url;
-                        if (!avatarImg && avatarLetter) {
-                            const img = document.createElement('img');
-                            img.id = 'profile-avatar-img';
-                            img.className = 'h-24 w-24 rounded-full object-cover';
-                            img.src = data.new_image_url;
-                            avatarLetter.replaceWith(img);
-                        }
+                    const profileImg = document.getElementById('profile-avatar-img');
+                    if (profileImg) {
+                        profileImg.src = url;
                     } else {
-                        if (avatarImg) {
-                            const div = document.createElement('div');
-                            div.id = 'profile-avatar';
-                            div.className = 'flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white';
-                            div.textContent = (uname || displayName || 'U')[0].toUpperCase();
-                            avatarImg.replaceWith(div);
-                            avatarLetter = div;
-                        } else if (avatarLetter) {
-                            avatarLetter.textContent = (uname || displayName || 'U')[0].toUpperCase();
-                        }
+                        const img = document.createElement('img');
+                        img.id = 'profile-avatar-img';
+                        img.className = 'h-24 w-24 rounded-full object-cover';
+                        img.src = url;
+                        const letter = document.getElementById('profile-avatar');
+                        if (letter) letter.replaceWith(img);
+                    }
+
+                    const navImg = document.getElementById('nav-avatar-img');
+                    if (navImg) {
+                        navImg.src = url;
+                        navImg.classList.remove('hidden');
                     }
 
                     const navUser   = document.getElementById('nav-username');
-                    const navImg    = document.getElementById('nav-avatar-img');
-                    const navLetter = document.getElementById('nav-avatar');
-
                     if (navUser && (uname || displayName)) navUser.textContent = uname || displayName;
-
-                    if (data.new_image_url && !data.new_image_url.includes('default.jpg')) {
-                        if (navImg)  { navImg.src = data.new_image_url; navImg.classList.remove('hidden'); }
-                        if (navLetter) navLetter.classList.add('hidden');
-                    } else {
-                        if (navLetter) { navLetter.textContent = (uname || displayName || 'U')[0].toUpperCase(); navLetter.classList.remove('hidden'); }
-                        if (navImg)    navImg.classList.add('hidden');
-                    }
 
                     SuccessModal.open(data.message || 'Profil berhasil diperbarui!');
                     editModal.classList.add('hidden');

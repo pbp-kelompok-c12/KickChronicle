@@ -1,3 +1,4 @@
+{% load static %}
 <form id="edit-profile-form" method="POST" action="{% url 'auth_profil:edit_profile' %}" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
@@ -32,7 +33,7 @@
         <div class="flex items-start gap-4">
             <!-- Preview bulat -->
             <img id="editpf-preview"
-                src="{{ request.user.profile.image.url }}"
+                src="{{ current_avatar_url }}"
                 class="h-16 w-16 rounded-full object-cover border border-border/50"
                 alt="Preview">
 
