@@ -22,12 +22,24 @@ def show_main_page(request):
     }
     return render(request, "highlight_main.html", context)
 
-def show_highlight(request,id):
-    highlight = get_object_or_404(Highlight,pk=id)
-    context = {
-        'highlight': highlight
-    }
+def show_highlight(request, id):
+    highlight = get_object_or_404(Highlight, pk=id)
 
+    # Ambil param "from" dari URL, misalnya ?from=favorite
+    from_page = request.GET.get('from')
+
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = Favorite.objects.filter(
+            user=request.user,
+            highlight=highlight
+        ).exists()
+
+    context = {
+        'highlight': highlight,
+        'is_favorited': is_favorited,
+        'from_page': from_page,  # supaya bisa ditampilkan di template
+    }
     return render(request, "highlight_detail.html", context)
 
 def add_highlight(request):

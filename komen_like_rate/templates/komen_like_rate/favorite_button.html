@@ -6,38 +6,35 @@
          {% if is_favorited %} fav-on {% else %} fav-off {% endif %}"
   data-id="{{ highlight.id }}"
   aria-pressed="{{ is_favorited|yesno:'true,false' }}"
+  type="button"
 >
-  <span id="favIcon" class="text-base">❤︎</span>
+  <span id="favIcon" class="text-base" style="color:{% if is_favorited %}#a16207{% else %}#1f2937{% endif %};">❤︎</span>
   <span id="favLabel">{% if is_favorited %}Favourited{% else %}Favourite{% endif %}</span>
 </button>
 
 <style>
 .fav-off {
-  background: #e5e7eb;          
-  border-color: #6b7280;        
-  color: #1f2937;               
+  background: #e5e7eb;          /* sama seperti versi kamu */
+  border-color: #6b7280;
+  color: #1f2937;
 }
-.fav-off:hover {
-  background: #d1d5db;          
-}
+.fav-off:hover { background: #d1d5db; }
 
 .fav-on {
-  background: #fef9c3;          
-  border-color: #facc15;       
-  color: #a16207;               
+  background: #fef9c3;
+  border-color: #facc15;
+  color: #a16207;
 }
-.fav-on:hover {
-  background: #fef08a;
-}
+.fav-on:hover { background: #fef08a; }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('favBtn');
+  const btn   = document.getElementById('favBtn');
   if (!btn) return;
 
   const label = document.getElementById('favLabel');
-  const icon = document.getElementById('favIcon');
+  const icon  = document.getElementById('favIcon');
   const getCsrf = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
   btn.addEventListener('click', async () => {
@@ -59,13 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.favorited) {
         btn.classList.add('fav-on');
         btn.classList.remove('fav-off');
+        btn.setAttribute('aria-pressed', 'true');       // ← update ARIA
         label.textContent = 'Favourited';
-        icon.style.color = '#eab308';
+        icon.style.color = '#a16207';                   // ← warna love saat ON
       } else {
         btn.classList.remove('fav-on');
         btn.classList.add('fav-off');
+        btn.setAttribute('aria-pressed', 'false');      // ← update ARIA
         label.textContent = 'Favourite';
-        icon.style.color = '#1f2937';
+        icon.style.color = '#1f2937';                   // ← warna love saat OFF
       }
     } catch (e) {
       console.error(e);

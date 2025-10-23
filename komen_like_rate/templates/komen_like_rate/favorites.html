@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen relative bg-[#121214] text-gray-100">
+  <div class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-[#2b2b2e] bg-[#18181b] px-5 py-4 shadow-lg">
+      <h1 class="text-3xl font-bold flex items-center gap-3">
+        <span class="emoji">🔥</span>
+        <span class="title-text">Favorite Matches</span>
+      </h1>
+    </div>
+
+    <!-- FAVORITE CARDS -->
+    {% if favorites %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="favorite-list">
+        {% for fav in favorites %}
+          {% if fav.highlight %}
+            {% with highlight=fav.highlight %}
+            <article class="bg-[#1c1c1f] rounded-lg border border-[#2b2b2e] hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 overflow-hidden text-white transform hover:-translate-y-1">
+              
+              <!-- Thumbnail -->
+              <div class="aspect-[16/9] relative overflow-hidden">
+                {% if highlight.manual_thumbnail_url %}
+                  <img src="{{ highlight.manual_thumbnail_url }}" alt="{{ highlight.name }}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                {% else %}
+                  <div class="w-full h-full bg-[#2a2a2e] flex items-center justify-center text-sm text-gray-400">
+                    No thumbnail
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Content -->
+              <div class="p-5 border-b border-[#2b2b2e]">
+                <p class="text-sm text-gray-400 mb-2">{{ highlight.created_at|date:"M d, Y" }}</p>
+
+                <h3 class="text-lg font-semibold text-[#f3f4f6] mb-2 line-clamp-2 leading-tight">
+                  <a href="{% url 'highlight:show_highlight' highlight.id %}?from=favorite" class="hover:text-blue-400 transition-colors">
+                    {{ highlight.name }}
+                  </a>
+                </h3>
+
+                <p class="text-gray-300 text-sm leading-relaxed line-clamp-3 mb-2">
+                  {{ highlight.description|truncatewords:20 }}
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div class="flex justify-between items-center px-5 py-4 bg-[#1c1c1f] border-t border-[#2b2b2e]">
+                <a href="{% url 'highlight:show_highlight' highlight.id %}?from=favorite" 
+                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition transform hover:scale-105">
+                  View →
+                </a>
+                <form method="POST" action="{% url 'komen_like_rate:toggle_favorite' highlight.id %}" class="delete-fav-form">
+                  {% csrf_token %}
+                  <button type="submit" 
+                          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition transform hover:scale-105">
+                    Delete
+                  </button>
+                </form>
+              </div>
+
+            </article>
+            {% endwith %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-gray-400 text-center text-sm">Kamu belum menandai highlight sebagai favorit.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ✅ AJAX DELETE SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const forms = document.querySelectorAll(".delete-fav-form");
+
+  forms.forEach(form => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const article = form.closest("article");
+      const csrf = form.querySelector("[name=csrfmiddlewaretoken]").value;
+
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: { "X-CSRFToken": csrf },
+        });
+        const result = await response.json();
+
+        if (result.status === "ok" && result.action === "removed") {
+          // efek animasi fade-out & shrink
+          article.classList.add("opacity-0", "scale-95", "transition-all", "duration-300");
+          setTimeout(() => article.remove(), 300);
+        }
+      } catch (error) {
+        console.error("Error deleting favorite:", error);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
