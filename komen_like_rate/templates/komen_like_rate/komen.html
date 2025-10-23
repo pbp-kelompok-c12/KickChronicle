@@ -77,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const getCsrf = () => document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-  // Auto-resize textarea biar enak ngetik
   function autosize() {
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
@@ -85,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function () {
   textarea.addEventListener('input', autosize);
   autosize();
 
-  // Ctrl/⌘+Enter untuk submit
   textarea.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       form.requestSubmit();
@@ -172,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Hapus komentar (delegation)
+
   list.addEventListener('click', async (e) => {
     const btn = e.target.closest('.delete-comment');
     if (!btn) return;
@@ -180,7 +178,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const id = btn.dataset.id;
     if (!confirm('Hapus komentar ini?')) return;
 
-    // Jika belum ada id dari server (fallback), hapus node saja
     if (!id) {
       btn.closest('[id^="c-"]')?.remove();
       countEl.textContent = String(Math.max(0, parseInt(countEl.textContent || '1', 10) - 1));

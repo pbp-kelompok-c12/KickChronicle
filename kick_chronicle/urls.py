@@ -25,6 +25,7 @@ urlpatterns = [
     path('',include('highlight.urls')),
     path('kalender/', include('kalender.urls')),
     path('accounts/', include('allauth.urls')),
+    path('komen/', include('komen_like_rate.urls')),  
 ]
 
 if settings.DEBUG:

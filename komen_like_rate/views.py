@@ -7,7 +7,9 @@ from django.db.models import Avg
 from .models import Rating, Comment, Favorite
 from .forms import RatingForm, CommentForm
 from django.views.decorators.http import require_POST
-from highlight.models import Highlight  # assumes the highlight app’s model
+from highlight.models import Highlight 
+from django.http import JsonResponse, HttpResponseForbidden
+
 
 @login_required
 def rate_highlight(request, highlight_id):
@@ -20,9 +22,8 @@ def rate_highlight(request, highlight_id):
                 user=request.user, highlight=highlight,
                 defaults={'value': value}
             )
-            # Redirect back to highlight detail after rating
             return redirect('highlight:detail', pk=highlight_id)
-    return HttpResponseBadRequest("Invalid rating")  # Or handle GET by returning form
+    return HttpResponseBadRequest("Invalid rating")  
 
 @login_required
 def add_comment(request, highlight_id):
@@ -34,7 +35,6 @@ def add_comment(request, highlight_id):
             comment.user = request.user
             comment.highlight = highlight
             comment.save()
-            # Prepare response data (could return rendered HTML snippet)
             data = {
                 'user': comment.user.username,
                 'content': comment.content,
@@ -107,10 +107,6 @@ def top_rated(request):
     })
 
 def delete_comment(request, comment_id):
-    """
-    Hapus komentar milik user yang sedang login.
-    Non-pemilik akan ditolak (403).
-    """
     comment = get_object_or_404(Comment, id=comment_id)
     if comment.user_id != request.user.id:
         return HttpResponseForbidden("Tidak boleh menghapus komentar orang lain.")
