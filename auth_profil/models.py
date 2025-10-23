@@ -6,7 +6,7 @@ from django.dispatch import receiver
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='profile_pics/default.png', upload_to='profile_pics')
+    image = models.ImageField(upload_to='profile_pics', blank=True, null=True)
 
     def __str__(self):
         return f'{self.user.username} Profile'
@@ -29,10 +29,16 @@ def delete_old_image_on_change(sender, instance, **kwargs):
     except Profile.DoesNotExist:
         return
     new = instance.image
-    if old and old.name != (new.name if new else None) and not old.name.endswith('default.png'):
-        old.storage.delete(old.name)
+    if old and old.name and (not new or old.name != getattr(new, "name", None)):
+        try:
+            old.storage.delete(old.name)
+        except Exception:
+            pass            
 
 @receiver(post_delete, sender=Profile)
 def delete_image_on_delete(sender, instance, **kwargs):
-    if instance.image and instance.image.name and not instance.image.name.endswith('default.png'):
-        instance.image.storage.delete(instance.image.name)
+    if instance.image and instance.image.name:
+        try:
+            instance.image.storage.delete(instance.image.name)
+        except Exception:
+            pass

@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, EditProfileForm, CustomPasswordChangeForm, UserUpdateForm, ProfileUpdateForm
 from django.http import JsonResponse
+from django.templatetags.static import static
 import json
 
 def register_user(request):
@@ -68,7 +69,7 @@ def edit_profile_view(request):
                 return JsonResponse({
                     'status': 'success', 
                     'message': 'Profil berhasil diperbarui!',
-                    'new_image_url': request.user.profile.image.url
+                    'new_image_url': request.user.profile.image.url if request.user.profile.image else ''
                 })
             else:
                 errors = {**u_form.errors, **p_form.errors}
@@ -76,8 +77,20 @@ def edit_profile_view(request):
     
     u_form = UserUpdateForm(instance=request.user)
     p_form = ProfileUpdateForm(instance=request.user.profile)
-    context = {'u_form': u_form, 'p_form': p_form}
-    return render(request, 'edit_profile.html', context)
+    
+    if getattr(request.user.profile, "image", None):
+        try:
+            current_avatar_url = request.user.profile.image.url
+        except Exception:
+            current_avatar_url = static('img/default.png')
+    else:
+        current_avatar_url = static('img/default.png')
+
+    return render(
+        request,
+        'edit_profile.html',
+        {'u_form': u_form, 'p_form': p_form, 'current_avatar_url': current_avatar_url}
+    )
 
 @login_required
 def delete_account_view(request):

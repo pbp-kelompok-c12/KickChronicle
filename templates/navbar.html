@@ -1,3 +1,4 @@
+{% load static %}
 <nav class="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur" role="navigation">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
@@ -12,6 +13,7 @@
                     <a href="/" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Highlight</a>
                     <a href="#" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Schedule</a>
                     <a href="#" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Top Rated</a>
+                    <a href="#" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Team</a>
                 </div>
             </div>
 
@@ -20,16 +22,10 @@
                     <div class="relative">
                         <button id="user-menu-button" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                             <span class="sr-only">Open user menu</span>
-                            {% if user.profile.image and user.profile.image.name != 'default.jpg' %}
-                                <img id="nav-avatar-img"
-                                    src="{{ user.profile.image.url }}"
-                                    alt="Avatar"
-                                    class="h-8 w-8 rounded-full object-cover">
+                            {% if user.profile.image %}
+                                <img id="nav-avatar-img" class="h-8 w-8 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
                             {% else %}
-                                <div id="nav-avatar"
-                                    class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-semibold text-white">
-                                {{ user.username|slice:":1"|upper }}
-                                </div>
+                                <img id="nav-avatar-img" class="h-8 w-8 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
                             {% endif %}
                             <span id="nav-username" class="hidden sm:inline text-sm font-medium text-foreground">{{ user.username }}</span>
                         </button>
