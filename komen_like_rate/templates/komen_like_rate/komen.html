@@ -1,0 +1,212 @@
+<div class="p-6 border border-gray-200 bg-gray-50 rounded-2xl">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-semibold text-gray-900">Komentar</h2>
+
+    <!-- badge jumlah -->
+    <span class="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-700">
+      <span id="commentCount">{{ highlight.comments.count }}</span> komentar
+    </span>
+  </div>
+
+  <!-- Form Komentar -->
+  <form id="commentForm" class="mb-5">
+    {% csrf_token %}
+    <div class="flex items-start gap-3">
+      <div class="flex-1">
+        <textarea
+          name="content"
+          id="commentContent"
+          rows="3"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 placeholder-gray-400
+                 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+          placeholder="Tulis komentar yang relevan dengan highlight ini..."></textarea>
+      </div>
+
+      <button id="sendBtn" type="submit"
+        class="h-11 px-5 rounded-xl font-semibold
+               bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800
+               border border-blue-700/20 shadow-sm transition">
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+          Kirim
+        </span>
+      </button>
+    </div>
+    <p class="sr-only">Gunakan Ctrl/⌘ + Enter untuk mengirim.</p>
+  </form>
+
+  <!-- Daftar Komentar -->
+  <div id="commentList" class="space-y-4">
+    {% for comment in highlight.comments.all %}
+      <div id="c-{{ comment.id }}" class="p-4 bg-white border border-gray-200 rounded-xl">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">
+              {{ comment.user.username|first|upper }}
+            </div>
+            <div>
+              <p class="text-sm text-gray-900 font-semibold">{{ comment.user.username }}</p>
+              <p class="text-xs text-gray-500">{{ comment.created_at|timesince }} lalu</p>
+            </div>
+          </div>
+
+          {% if comment.user_id == request.user.id %}
+          <button type="button"
+            class="delete-comment text-red-600 text-sm font-semibold hover:underline"
+            data-id="{{ comment.id }}">
+            Hapus
+          </button>
+          {% endif %}
+        </div>
+
+        <p class="mt-3 text-gray-900 leading-relaxed">{{ comment.content }}</p>
+      </div>
+    {% empty %}
+      <p id="emptyState" class="text-gray-500">Belum ada komentar.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('commentForm');
+  const textarea = document.getElementById('commentContent');
+  const list = document.getElementById('commentList');
+  const countEl = document.getElementById('commentCount');
+  const sendBtn = document.getElementById('sendBtn');
+
+  const getCsrf = () => document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // Auto-resize textarea biar enak ngetik
+  function autosize() {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+  textarea.addEventListener('input', autosize);
+  autosize();
+
+  // Ctrl/⌘+Enter untuk submit
+  textarea.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      form.requestSubmit();
+    }
+  });
+
+  function updateEmptyState() {
+    const items = list.querySelectorAll('[id^="c-"]');
+    const empty = document.getElementById('emptyState');
+    if (items.length === 0) {
+      if (!empty) {
+        const p = document.createElement('p');
+        p.id = 'emptyState';
+        p.className = 'text-gray-500';
+        p.textContent = 'Belum ada komentar.';
+        list.appendChild(p);
+      }
+    } else {
+      empty?.remove();
+    }
+  }
+
+  // Kirim komentar (AJAX)
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const content = textarea.value.trim();
+    if (!content) return;
+
+    try {
+      sendBtn.disabled = true;
+      sendBtn.classList.add('opacity-60', 'cursor-not-allowed');
+
+      const res = await fetch("{% url 'komen_like_rate:add_comment' highlight.id %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': getCsrf()
+        },
+        body: new URLSearchParams({ content })
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        alert('Komentar gagal dikirim.');
+        return;
+      }
+
+      // Buat card komentar baru (punya tombol Hapus karena milik user sendiri)
+      const wrap = document.createElement('div');
+      wrap.id = 'c-' + (data.id || ('new-' + Date.now()));
+      wrap.className = 'p-4 bg-white border border-gray-200 rounded-xl';
+      wrap.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">
+              {{ request.user.username|first|upper }}
+            </div>
+            <div>
+              <p class="text-sm text-gray-900 font-semibold">${data.user}</p>
+              <p class="text-xs text-gray-500">baru saja</p>
+            </div>
+          </div>
+          <button type="button" class="delete-comment text-red-600 text-sm font-semibold hover:underline"
+                  data-id="${data.id || ''}">
+            Hapus
+          </button>
+        </div>
+        <p class="mt-3 text-gray-900 leading-relaxed">${data.content}</p>
+      `;
+      list.prepend(wrap);
+
+      textarea.value = '';
+      autosize();
+
+      // update counter
+      countEl.textContent = String(parseInt(countEl.textContent || '0', 10) + 1);
+      updateEmptyState();
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan.');
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
+  });
+
+  // Hapus komentar (delegation)
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.delete-comment');
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    if (!confirm('Hapus komentar ini?')) return;
+
+    // Jika belum ada id dari server (fallback), hapus node saja
+    if (!id) {
+      btn.closest('[id^="c-"]')?.remove();
+      countEl.textContent = String(Math.max(0, parseInt(countEl.textContent || '1', 10) - 1));
+      updateEmptyState();
+      return;
+    }
+
+    try {
+      const res = await fetch("{% url 'komen_like_rate:delete_comment' 0 %}".replace('0', id), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf() }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.status === 'ok') {
+        document.getElementById('c-' + id)?.remove();
+        countEl.textContent = String(Math.max(0, parseInt(countEl.textContent || '1', 10) - 1));
+        updateEmptyState();
+      } else {
+        alert('Gagal menghapus komentar.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan saat menghapus.');
+    }
+  });
+
+  updateEmptyState();
+});
+</script>

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static %}
+{% load embed_video_tags %}
+{% load tz %}
+
+{% block content %}
+<div class="min-h-screen relative bg-[#0b0b0c] text-gray-100">
+  <div class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-gray-800 bg-[#141416] px-5 py-4 shadow-lg">
+      <h1 class="text-3xl font-bold flex items-center gap-3">
+        <span class="emoji">🏆</span>
+        <span class="title-text">Top Rated Matches</span>
+      </h1>
+
+      <div class="flex items-center gap-3">
+        <div class="datepicker-wrapper">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z"
+              stroke="#e5e7eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <input type="text" id="datepicker" placeholder="Select date">
+        </div>
+
+        {% now "Y-m-d" as today_str %}
+        <a href="?start_date={{ today_str }}&end_date={{ today_str }}"
+           class="px-4 py-2 bg-gray-800 text-gray-200 rounded-full border border-gray-700 hover:bg-gray-700 transition">
+          Today
+        </a>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="space-y-5">
+      {% if highlights %}
+        {% for highlight in highlights %}
+          <article class="rounded-2xl border border-gray-800 bg-[#121214] hover:bg-[#161618] transition overflow-hidden shadow-md">
+            <div class="flex flex-col sm:flex-row">
+              <!-- Thumbnail -->
+              <div class="relative sm:w-64 w-full">
+                {% video highlight.url as vid %}
+                  {% if highlight.manual_thumbnail_url %}
+                    <img src="{{ highlight.manual_thumbnail_url }}" alt="thumbnail {{ highlight.name }}" class="w-full h-full object-cover">
+                  {% elif highlight.is_embeddable and vid %}
+                    <img src="{{ vid.thumbnail }}" alt="thumbnail {{ highlight.name }}" class="w-full h-full object-cover">
+                  {% else %}
+                    <div class="flex items-center justify-center h-40 text-gray-400 bg-gray-900">No thumbnail</div>
+                  {% endif %}
+                {% endvideo %}
+                <span class="absolute top-3 left-3 bg-blue-600 text-white w-8 h-8 flex items-center justify-center font-semibold rounded-full shadow-lg">
+                  {{ forloop.counter }}
+                </span>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 p-5">
+                <div class="flex items-center justify-between gap-3">
+                  <h3 class="text-lg font-semibold">{{ highlight.name }}</h3>
+                  <a href="{% url 'highlight:show_highlight' highlight.id %}"
+                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">
+                    View →
+                  </a>
+                </div>
+
+                <div class="mt-3 flex items-center gap-2 text-sm text-gray-300">
+                  {% with ar=highlight.avg_rating|default_if_none:"0" %}
+                    <span>Average Rating:</span>
+                    <span class="font-bold text-yellow-400">{{ ar|floatformat:1 }}/5.0</span>
+                  {% endwith %}
+                </div>
+
+                {% if highlight.description %}
+                  <p class="mt-3 text-sm text-gray-400">{{ highlight.description }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-10 text-gray-400 border border-dashed border-gray-700 rounded-xl bg-[#121214]">
+          No highlights found for the selected date.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const url = new URL(window.location.href);
+  const start = url.searchParams.get("start_date");
+  const end = url.searchParams.get("end_date");
+  flatpickr("#datepicker", {
+    altInput: true,
+    altFormat: "l, d F Y",
+    dateFormat: "Y-m-d",
+    defaultDate: start || "today",
+    onChange: function(_, dateStr) {
+      window.location.href = `?start_date=${dateStr}&end_date=${dateStr}`;
+    }
+  });
+});
+</script>
+
+<style>
+body, input, button {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Emoji Glow */
+.emoji {
+  font-size: 30px;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.6));
+  animation: glowPulse 2s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255,215,0,0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.8)); transform: scale(1.05); }
+}
+
+/* Title */
+.title-text {
+  background: linear-gradient(90deg, #ffffff, #FFD166);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Datepicker */
+.datepicker-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: #1a1b1e;
+  border: 1px solid #2c2c31;
+  border-radius: 10px;
+}
+.datepicker-wrapper input {
+  border: none;
+  background: transparent;
+  color: #f5f5f5;
+  font-size: 14px;
+  outline: none;
+  width: 160px;
+}
+.datepicker-wrapper svg {
+  opacity: 0.8;
+}
+</style>
+{% endblock %}

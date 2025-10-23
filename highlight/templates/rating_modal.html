@@ -75,6 +75,10 @@
       <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 4.218 4.661.679c1.181.172 1.655 1.616.799 2.48l-3.374 3.29.8 4.643c.204 1.176-.99 2.079-2.051 1.516L12 18.897l-4.17 2.193c-1.06.562-2.255-.34-2.051-1.516l.8-4.643-3.374-3.29c-.856-.865-.382-2.308.799-2.48l4.661-.679L10.788 3.21Z" clip-rule="evenodd" /></svg></label>
       <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 4.218 4.661.679c1.181.172 1.655 1.616.799 2.48l-3.374 3.29.8 4.643c.204 1.176-.99 2.079-2.051 1.516L12 18.897l-4.17 2.193c-1.06.562-2.255-.34-2.051-1.516l.8-4.643-3.374-3.29c-.856-.865-.382-2.308.799-2.48l4.661-.679L10.788 3.21Z" clip-rule="evenodd" /></svg></label>
     </div>
+    <form id="ratingForm">
+      {% csrf_token %}
+  <!-- ini bisa kosong, CSRF token aja yang penting -->
+    </form>
 
     <!-- Submit Button -->
     <div class="flex justify-end">
@@ -131,17 +135,42 @@
       }
     }
 
-    async function handleSubmitRating() {
-      if (selectedRating > 0) {
-        // --- Placeholder for server submission ---
-        const highlightId = '{{ highlight_id }}';
+async function handleSubmitRating() {
+  if (selectedRating > 0) {
+    const highlightId = '{{ highlight_id }}';
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        // Example fetch call (replace with your actual endpoint and logic)
-        /* ... */
+    try {
+      const response = await fetch("{% url 'komen_like_rate:submit_rating' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrfToken,
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: new URLSearchParams({
+          highlight_id: highlightId,
+          rating: selectedRating  // KEY-nya harus 'rating'
+        })
+      });
 
-        closeModal();
+      const data = await response.json();
+      console.log("Response:", data); // cek di console browser
+
+      if (data.status === 'success') {
+        closeModal(); // modal ketutup kalau sukses
+        alert('Rating berhasil dikirim!');
+        window.location.reload(); // reload biar top-rated update (sementara)
+      } else {
+        alert('Gagal kirim rating!');
       }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi error!');
     }
+  }
+}
+
 
     // --- Event Listeners ---
     if (rateButton) {
