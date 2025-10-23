@@ -27,6 +27,23 @@
               {{ field.label }}
             </label>
             <div class="w-full">
+              {% if field.field.widget.input_type == "date" %}
+              <input
+                type="date"
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                value="{{ field.value|date:'Y-m-d' }}"
+                style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
+              >
+            {% elif field.field.widget.input_type == "time" %}
+              <input
+                type="time"
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                value="{{ field.value|time:'H:i' }}"
+                style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
+              >
+            {% else %}
               <input
                 type="{{ field.field.widget.input_type|default:'text' }}"
                 name="{{ field.name }}"
@@ -34,6 +51,8 @@
                 value="{{ field.value|default_if_none:'' }}"
                 style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
               >
+            {% endif %}
+
             </div>
             <p class="error text-red-500 text-sm mt-1" id="error-{{ field.name }}"></p>
           </div>
@@ -62,6 +81,30 @@
 document.addEventListener("DOMContentLoaded", function() {
   const form = document.getElementById("edit-schedule-form");
   const messageBox = document.getElementById("ajax-message");
+  const iconSelectors = [
+    'svg',              
+    'i.fa-calendar',     
+    'i.fa-clock',       
+    'i.bi-calendar',     
+    'i.bi-clock',        
+    'input[type="date"]::-webkit-calendar-picker-indicator',
+    'input[type="time"]::-webkit-calendar-picker-indicator'
+  ];
+
+  document.querySelectorAll('svg, i.fa-calendar, i.fa-clock, i.bi-calendar, i.bi-clock')
+    .forEach(icon => {
+      icon.style.color = "white";
+      icon.style.fill = "white";
+    });
+
+  const style = document.createElement('style');
+  style.textContent = `
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+  `;
+  document.head.appendChild(style);
 
   function getCookie(name) {
     let cookieValue = null;
