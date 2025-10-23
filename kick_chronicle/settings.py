@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'anymail',
     'auth_profil',
     "cloudinary",
     "cloudinary_storage",
@@ -59,6 +60,9 @@ INSTALLED_APPS = [
     'tim',
     'embed_video',
 ]
+
+ANYMAIL = {"SENDGRID_API_KEY": os.getenv("SENDGRID_API_KEY")}
+DEFAULT_FROM_EMAIL = "Kick Chronicle <chroniclekick@gmail.com>"
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -121,12 +125,7 @@ if PRODUCTION:
             }
         }
     }
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
 
 else:
     # Development: gunakan SQLite
@@ -136,13 +135,8 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    if os.getenv('EMAIL_HOST_USER'):
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-        EMAIL_HOST = 'smtp.gmail.com'
-        EMAIL_PORT = 587
-        EMAIL_USE_TLS = True
-        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    if os.getenv("SENDGRID_API_KEY"):
+        EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
     else:
         EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -224,3 +218,5 @@ if CLOUDINARY_URL:
 else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
+
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
