@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Kalender
@@ -8,6 +9,7 @@ from icalendar import Calendar, Event
 from datetime import timedelta
 import pytz
 
+@login_required
 def show_calendar_page(request):
     date_str = request.GET.get("date")
     if date_str:
@@ -24,6 +26,7 @@ def show_calendar_page(request):
         "selected_date": selected_date
     })
 
+@login_required
 def get_matches_api(request):
     date_str = request.GET.get("date")
     if not date_str:
@@ -49,6 +52,7 @@ def get_matches_api(request):
     except (ValueError, TypeError):
         return JsonResponse({"matches": []})
 
+@login_required
 def export_kalender_ics(request, kalender_id):
     jadwal = get_object_or_404(Kalender, pk=kalender_id)
     cal = Calendar()
@@ -83,7 +87,6 @@ def add_schedule_view(request):
     form = ScheduleForm()
     return render(request, 'add_schedule.html', {'form': form})
 
-
 @staff_member_required
 def edit_schedule_view(request, pk):
     jadwal = get_object_or_404(Kalender, pk=pk)
@@ -105,6 +108,7 @@ def delete_schedule_view(request, pk):
         return JsonResponse({"success": True, "message": "Schedule berhasil dihapus!"})
     return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
 
+@login_required
 def schedule_detail_view(request, pk):
     jadwal = get_object_or_404(Kalender, pk=pk)
     return render(request, "schedule_detail.html", {"jadwal": jadwal})
