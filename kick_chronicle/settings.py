@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'auth_profil',
+    "cloudinary",
+    "cloudinary_storage",
     'highlight',
     'kalender',
     'komen_like_rate',
@@ -213,3 +215,12 @@ SOCIALACCOUNT_EMAIL_REQUIRED = True # Memaksa provider (Google) untuk memberikan
 SOCIALACCOUNT_AUTO_SIGNUP = True    # Otomatis membuat akun tanpa halaman konfirmasi tambahan (jika email baru)
 SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+
+if CLOUDINARY_URL:
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    MEDIA_URL = "/media/"
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
