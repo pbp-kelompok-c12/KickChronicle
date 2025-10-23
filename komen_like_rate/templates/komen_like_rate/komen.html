@@ -1,9 +1,9 @@
-<div class="p-6 border border-gray-200 bg-gray-50 rounded-2xl">
+<div class="p-6 border border-zinc-700 bg-zinc-900 rounded-2xl">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-semibold text-gray-900">Komentar</h2>
+    <h2 class="text-xl font-semibold text-zinc-100">Komentar</h2>
 
     <!-- badge jumlah -->
-    <span class="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-700">
+    <span class="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-full border border-zinc-700 bg-zinc-800 text-zinc-300">
       <span id="commentCount">{{ highlight.comments.count }}</span> komentar
     </span>
   </div>
@@ -17,15 +17,13 @@
           name="content"
           id="commentContent"
           rows="3"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 placeholder-gray-400
-                 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+          class="w-full px-4 py-3 border border-zinc-700 rounded-xl
+                bg-zinc-800 text-zinc-100 placeholder-zinc-400
+                focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
           placeholder="Tulis komentar yang relevan dengan highlight ini..."></textarea>
       </div>
 
-      <button id="sendBtn" type="submit"
-        class="h-11 px-5 rounded-xl font-semibold
-               bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800
-               border border-blue-700/20 shadow-sm transition">
+      <button id="sendBtn" type="submit" class="h-11 px-5 rounded-xl font-semibold bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 border border-indigo-500/20 shadow-sm transition">
         <span class="inline-flex items-center gap-2">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
           Kirim
@@ -38,56 +36,61 @@
   <!-- Daftar Komentar -->
   <div id="commentList" class="space-y-4">
     {% for comment in highlight.comments.all %}
-      <div id="c-{{ comment.id }}" class="p-4 bg-white border border-gray-200 rounded-xl">
+      <div id="c-{{ comment.id }}" class="p-4 bg-zinc-900 border border-zinc-700 rounded-xl">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">
-              {{ comment.user.username|first|upper }}
-            </div>
+            {% if comment.user.profile and comment.user.profile.image %}
+              <img class="w-10 h-10 rounded-full object-cover"
+                  src="{{ comment.user.profile.image.url }}"
+                  alt="{{ comment.user.username }}">
+            {% else %}
+              <div class="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-200 font-semibold">
+                {{ comment.user.username|slice:":1"|upper }}
+              </div>
+            {% endif %}
             <div>
-              <p class="text-sm text-gray-900 font-semibold">{{ comment.user.username }}</p>
-              <p class="text-xs text-gray-500">{{ comment.created_at|timesince }} lalu</p>
+              <p class="text-sm text-zinc-100 font-semibold">{{ comment.user.username }}</p>
+              <p class="text-xs text-zinc-400">{{ comment.created_at|timesince }} lalu</p>
             </div>
           </div>
-
           {% if comment.user_id == request.user.id %}
           <button type="button"
-            class="delete-comment text-red-600 text-sm font-semibold hover:underline"
+            class="delete-comment text-rose-400 text-sm font-semibold hover:text-rose-300"
             data-id="{{ comment.id }}">
             Hapus
           </button>
           {% endif %}
         </div>
 
-        <p class="mt-3 text-gray-900 leading-relaxed">{{ comment.content }}</p>
+        <p class="mt-3 text-zinc-100 leading-relaxed">{{ comment.content }}</p>
       </div>
     {% empty %}
-      <p id="emptyState" class="text-gray-500">Belum ada komentar.</p>
+      <p id="emptyState" class="text-zinc-400">Belum ada komentar.</p>
     {% endfor %}
   </div>
-</div>
+  </div>
 
-<!-- ✅ MODAL NOTIFIKASI -->
-<div id="modalAlert" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
-    <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 mb-2">Pemberitahuan</h3>
-    <p id="modalMessage" class="text-gray-700 mb-5">Pesan notifikasi di sini.</p>
-    <button id="modalClose" class="px-5 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
+  <!-- MODAL NOTIFIKASI -->
+  <div id="modalAlert" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+    <h3 id="modalTitle" class="text-lg font-semibold text-zinc-100 mb-2">Pemberitahuan</h3>
+    <p id="modalMessage" class="text-zinc-300 mb-5">Pesan notifikasi di sini.</p>
+    <button id="modalClose" class="px-5 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-500">
       Oke
     </button>
   </div>
-</div>
+  </div>
 
-<!-- ✅ MODAL KONFIRMASI HAPUS -->
-<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
-    <h3 class="text-lg font-semibold text-gray-900 mb-3">Konfirmasi</h3>
-    <p id="confirmMessage" class="text-gray-700 mb-5">Apakah kamu yakin ingin menghapus komentar ini?</p>
+  <!-- MODAL KONFIRMASI HAPUS -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+  <div class="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+    <h3 class="text-lg font-semibold text-zinc-100 mb-3">Konfirmasi</h3>
+    <p id="confirmMessage" class="text-zinc-300 mb-5">Apakah kamu yakin ingin menghapus komentar ini?</p>
     <div class="flex justify-center gap-3">
-      <button id="cancelDelete" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition">
+      <button id="cancelDelete" class="px-5 py-2 bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-xl font-semibold hover:bg-zinc-700 transition">
         Batal
       </button>
-      <button id="confirmDelete" class="px-5 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition">
+      <button id="confirmDelete" class="px-5 py-2 bg-rose-600 text-white rounded-xl font-semibold hover:bg-rose-500 transition">
         Hapus
       </button>
     </div>
@@ -185,15 +188,21 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      const avatarHtml = data.avatar_url
+        ? `<img class="w-10 h-10 rounded-full object-cover"
+                src="${data.avatar_url}"
+                alt="${data.user}">`
+        : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">
+            ${data.initial}
+          </div>`;
+
       const wrap = document.createElement('div');
       wrap.id = 'c-' + (data.id || ('new-' + Date.now()));
       wrap.className = 'p-4 bg-white border border-gray-200 rounded-xl';
       wrap.innerHTML = `
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">
-              {{ request.user.username|first|upper }}
-            </div>
+            ${avatarHtml}
             <div>
               <p class="text-sm text-gray-900 font-semibold">${data.user}</p>
               <p class="text-xs text-gray-500">baru saja</p>
@@ -206,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <p class="mt-3 text-gray-900 leading-relaxed">${data.content}</p>
       `;
+      wrap.querySelector('.comment-text').textContent = data.content;
       list.prepend(wrap);
 
       textarea.value = '';
