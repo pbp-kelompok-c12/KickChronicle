@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Premier League Standings - Kick Chronicle{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-foreground mb-2">Premier League Standings</h1>
+            <p class="text-muted-foreground">View final standings for Premier League seasons</p>
+        </div>
+
+        {% if user.is_superuser %}
+        <div class="bg-card rounded-lg shadow-lg p-6 mb-8 border border-border">
+            <h2 class="text-2xl font-semibold text-card-foreground mb-4">Upload Standings Data</h2>
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="id_season" class="block text-sm font-medium text-foreground mb-2">Season</label>
+                    {{ form.season }}
+                </div>
+                <div>
+                    <label for="id_csv_file" class="block text-sm font-medium text-foreground mb-2">CSV File</label>
+                    {{ form.csv_file }}
+                    <p class="mt-2 text-sm text-muted-foreground">Upload a CSV file with columns: pos, team, pld, w, d, l, gf, ga, gd, pts</p>
+                </div>
+                <div>
+                    <button type="submit" class="w-full sm:w-auto bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/80 transition-colors font-medium">
+                        Upload Standings
+                    </button>
+                </div>
+            </form>
+            <div id="uploadMessage" class="mt-4"></div>
+        </div>
+        {% endif %}
+
+        <!-- Filter Section -->
+        <div class="bg-card rounded-lg shadow-lg p-6 mb-8 border border-border">
+            <h2 class="text-xl font-semibold text-card-foreground mb-4">Filter by Season</h2>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="filterStandings('all')" class="filter-btn bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/80 transition-colors font-medium">
+                    All Seasons
+                </button>
+                <button onclick="filterStandings('22/23')" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                    2022/2023
+                </button>
+                <button onclick="filterStandings('23/24')" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                    2023/2024
+                </button>
+                <button onclick="filterStandings('24/25')" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                    2024/2025
+                </button>
+            </div>
+        </div>
+
+        <!-- Standings Tables Container -->
+        <div id="standingsContainer" class="space-y-8" data-is-superuser="{{ user.is_superuser|yesno:'true,false' }}">
+            <div class="text-center py-12">
+                <p class="text-muted-foreground text-lg">Loading standings data...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    let currentFilter = 'all';
+    const container = document.getElementById('standingsContainer');
+    const isSuperuser = container.dataset.isSuperuser === 'true';
+
+    // Load standings on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStandings();
+        
+        if (isSuperuser) {
+            const uploadForm = document.getElementById('uploadForm');
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const messageDiv = document.getElementById('uploadMessage');
+                    
+                    messageDiv.innerHTML = '<p class="text-yellow-500">Uploading...</p>';
+                    
+                    fetch('{% url "tim:upload_standings_ajax" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            messageDiv.innerHTML = `<div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded">${data.message}</div>`;
+                            uploadForm.reset();
+                            // Reload standings after successful upload
+                            setTimeout(() => {
+                                loadStandings();
+                                messageDiv.innerHTML = '';
+                            }, 2000);
+                        } else {
+                            messageDiv.innerHTML = `<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">${data.message}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        messageDiv.innerHTML = `<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">Error uploading file: ${error}</div>`;
+                    });
+                });
+            }
+        }
+    });
+
+    function filterStandings(season) {
+        currentFilter = season;
+        loadStandings();
+        
+        // Update button styles
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('bg-primary');
+            btn.classList.add('bg-gray-700');
+        });
+        event.target.classList.remove('bg-gray-700');
+        event.target.classList.add('bg-primary');
+    }
+
+    function loadStandings() {
+        const container = document.getElementById('standingsContainer');
+        const url = currentFilter === 'all' 
+            ? '{% url "tim:get_standings_json" %}'
+            : `{% url "tim:get_standings_json" %}?season=${currentFilter}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.standings.length === 0) {
+                    let emptyMessage = `
+                        <div class="text-center py-12 bg-card rounded-lg border border-border">
+                            <p class="text-muted-foreground text-lg">No standings data available yet.</p>`;
+                    
+                    if (isSuperuser) {
+                        emptyMessage += `
+                            <p class="text-sm text-muted-foreground mt-2">Please upload CSV files to populate the data.</p>`;
+                    }
+                    
+                    emptyMessage += `
+                        </div>
+                    `;
+                    
+                    container.innerHTML = emptyMessage;
+                    return;
+                }
+                
+                // Group standings by season
+                const standingsBySeason = {};
+                data.standings.forEach(standing => {
+                    if (!standingsBySeason[standing.season]) {
+                        standingsBySeason[standing.season] = [];
+                    }
+                    standingsBySeason[standing.season].push(standing);
+                });
+                
+                // Generate HTML for each season
+                let html = '';
+                const seasons = Object.keys(standingsBySeason).sort();
+                
+                seasons.forEach(season => {
+                    const seasonStandings = standingsBySeason[season];
+                    html += generateSeasonTable(season, seasonStandings);
+                });
+                
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-card rounded-lg border border-destructive">
+                        <p class="text-destructive text-lg">Error loading standings: ${error}</p>
+                    </div>
+                `;
+            });
+    }
+
+    function generateSeasonTable(season, standings) {
+        const seasonNames = {
+            '22/23': '2022/2023',
+            '23/24': '2023/2024',
+            '24/25': '2024/2025'
+        };
+        
+        return `
+            <div class="bg-card rounded-lg shadow-lg overflow-hidden border border-border">
+                <div class="bg-primary px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white">Season ${seasonNames[season]}</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Pos</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Team</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Pld</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">W</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">D</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">L</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">GF</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">GA</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">GD</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-card divide-y divide-border">
+                            ${standings.map((standing, index) => `
+                                <tr class="hover:bg-gray-800/50 transition-colors ${getPositionBgClass(standing.position)}">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground ${getPositionBorderClass(standing.position)}">${standing.position}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
+                                        <div class="flex items-center gap-3">
+                                            ${standing.logo_url ? `<img src="${standing.logo_url}" alt="${standing.team} logo" class="w-8 h-8 rounded-full object-cover"/>` : `<div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-300">N/A</div>`}
+                                            <span>${standing.team}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.played}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.won}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.drawn}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.lost}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.goals_for}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.goals_against}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-semibold ${standing.goal_difference >= 0 ? 'text-green-400' : 'text-red-400'}">${standing.goal_difference > 0 ? '+' : ''}${standing.goal_difference}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-foreground">${standing.points}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 bg-gray-800 border-t border-border">
+                    <div class="flex flex-wrap gap-4 text-xs text-gray-400">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-blue-900/30 border-l-4 border-blue-500"></div>
+                            <span>Champions League</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-green-900/30 border-l-4 border-green-500"></div>
+                            <span>Europa League</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-orange-900/30 border-l-4 border-orange-500"></div>
+                            <span>Europa Conference League</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-red-900/30 border-l-4 border-red-500"></div>
+                            <span>Relegation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getPositionBgClass(position) {
+        if (position <= 4) {
+            return 'bg-blue-900/10';
+        } else if (position === 5) {
+            return 'bg-green-900/10';
+        } else if (position === 6) {
+            return 'bg-orange-900/10';
+        } else if (position >= 18) {
+            return 'bg-red-900/10';
+        }
+        return '';
+    }
+
+    function getPositionBorderClass(position) {
+        if (position <= 4) {
+            return 'border-l-4 border-blue-500';
+        } else if (position === 5) {
+            return 'border-l-4 border-green-500';
+        } else if (position === 6) {
+            return 'border-l-4 border-orange-500';
+        } else if (position >= 18) {
+            return 'border-l-4 border-red-500';
+        }
+        return '';
+    }
+</script>
+{% endblock %}
