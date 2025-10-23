@@ -39,7 +39,7 @@
                     <!-- dropdown user -->
                     <div id="user-menu" class="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-card border border-gray-700 ring-1 ring-black ring-opacity-5 hidden" role="menu" aria-labelledby="user-menu-button">
                         <a href="{% url 'auth_profil:profile' %}" class="block px-4 py-2 text-sm text-foreground hover:bg-gray-700/50" role="menuitem">Settings</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-foreground hover:bg-gray-700/50" role="menuitem">Favorite</a>
+                        <a href="{% url 'komen_like_rate:favorite_list' %}" class="block px-4 py-2 text-sm text-foreground hover:bg-gray-700/50" role="menuitem">Favorite</a>
                         <a href="{% url 'auth_profil:logout' %}" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700/50" role="menuitem">Sign Out</a>
                     </div>
                 </div>

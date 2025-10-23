@@ -1,6 +1,6 @@
 # komen_like_rate/views.py
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
@@ -8,30 +8,41 @@ from .models import Rating, Comment, Favorite
 from .forms import RatingForm, CommentForm
 from django.views.decorators.http import require_POST
 from highlight.models import Highlight 
-from django.http import JsonResponse, HttpResponseForbidden
-
-
- 
 
 @login_required
 def add_comment(request, highlight_id):
     highlight = get_object_or_404(Highlight, id=highlight_id)
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.highlight = highlight
-            comment.save()
-            data = {
-                'user': comment.user.username,
-                'content': comment.content,
-                'created_at': comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            }
-            return JsonResponse(data)
-        else:
-            return JsonResponse({'error': 'Invalid form'}, status=400)
-    return HttpResponseBadRequest("Invalid request")
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Invalid request")
+
+    form = CommentForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({'error': 'Invalid form'}, status=400)
+
+    comment = form.save(commit=False)
+    comment.user = request.user
+    comment.highlight = highlight
+    comment.save()
+
+    avatar_url = ""
+    try:
+        prof = getattr(request.user, "profile", None)
+        if prof and prof.image:
+            avatar_url = prof.image.url
+    except Exception:
+        avatar_url = ""
+
+    data = {
+        'status': 'ok',
+        'id': comment.id,
+        'user': comment.user.username,
+        'content': comment.content,
+        'created_at': comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        'avatar_url': avatar_url,
+        'initial': comment.user.username[:1].upper(),
+    }
+    return JsonResponse(data)
 
 @login_required
 def toggle_favorite(request, highlight_id):
@@ -95,6 +106,8 @@ def top_rated(request):
         'end_date': end,
     })
 
+@login_required
+@require_POST
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
     if comment.user_id != request.user.id:
