@@ -14,5 +14,5 @@ class AuthProfilConfig(AppConfig):
     name = 'auth_profil'
 
     def ready(self):
-        # Hubungkan signal 'post_migrate' dengan fungsi handler kita
+        from . import signals
         post_migrate.connect(update_site_domain, sender=self)

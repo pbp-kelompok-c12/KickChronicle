@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, SetPasswordForm, PasswordChangeForm
 from django import forms
 from django.contrib.auth.models import User
+from .models import Profile
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')
@@ -63,3 +64,36 @@ class CustomPasswordChangeForm(PasswordChangeForm):
             'class': tailwind_classes,
             'placeholder': 'Confirm your new password'
         })
+
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name']
+        widgets = {
+            'username':   forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent',
+                'placeholder': 'username'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent',
+                'placeholder': 'First name'
+            }),
+            'last_name':  forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 rounded-lg bg-gray-700 border border-border text-white placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent',
+                'placeholder': 'Last name'
+            }),
+        }
+
+class ProfileUpdateForm(forms.ModelForm):
+    image = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'accept': 'image/*',
+            'id': 'id_image',
+            'class': 'hidden'
+        })
+    )
+
+    class Meta:
+        model = Profile
+        fields = ['image']

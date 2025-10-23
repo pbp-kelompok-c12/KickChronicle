@@ -8,29 +8,7 @@
 <div id="edit-profile-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
     <div class="w-full max-w-md bg-card p-8 border border-border/50 shadow-xl rounded-2xl m-4 relative">
         <button id="close-edit-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
-        <div id="edit-modal-content">
-            <h2 class="heading-md text-foreground mb-6">Edit Your Profile</h2>
-            <form id="edit-profile-form" method="POST" action="{% url 'auth_profil:edit_profile' %}" class="space-y-4">
-                {% csrf_token %}
-                <div>
-                    <label for="{{ edit_form.username.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">Username</label>
-                    {{ edit_form.username }}
-                    <div id="error-username" class="mt-2 text-xs text-red-400"></div>
-                </div>
-                <div>
-                    <label for="{{ edit_form.first_name.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">First Name</label>
-                    {{ edit_form.first_name }}
-                </div>
-                <div>
-                    <label for="{{ edit_form.last_name.id_for_label }}" class="block text-sm font-semibold text-foreground mb-2">Last Name</label>
-                    {{ edit_form.last_name }}
-                </div>
-                <div class="flex gap-4 !mt-6">
-                    <button type="button" id="cancel-edit-btn" class="w-full text-center py-3 font-semibold bg-gray-600 hover:bg-gray-700 rounded-lg">Cancel</button>
-                    <button type="submit" class="w-full py-3 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg">Save Changes</button>
-                </div>
-            </form>
-        </div>
+        <div id="edit-modal-content"></div>
     </div>
 </div>
 
@@ -69,9 +47,15 @@
     <div class="bg-zinc-900 p-8 border border-border/50 shadow-xl rounded-2xl">
         <div class="flex flex-wrap items-center gap-6">
             <div class="flex items-center gap-6 min-w-0">
-                <div id="profile-avatar" class="flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white">
-                    {{ user.username.0|upper }}
-                </div>
+                {% if user.profile.image and user.profile.image.name != 'default.jpg' %}
+                    <img id="profile-avatar-img" class="h-24 w-24 rounded-full object-cover"
+                        src="{{ user.profile.image.url }}" alt="Profile Picture">
+                {% else %}
+                    <div id="profile-avatar"
+                        class="flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white">
+                    {{ user.username|slice:":1"|upper }}
+                    </div>
+                {% endif %}
                 <div>
                     <h2 id="profile-name" class="heading-md text-foreground">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
                     <p id="profile-email" class="text-muted-foreground mt-1">{{ user.email }}</p>
@@ -162,84 +146,156 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // --- SCRIPT UNTUK MODAL EDIT PROFILE ---
-    const editModal = document.getElementById('edit-profile-modal');
-    const openEditModalBtn = document.getElementById('open-edit-modal-btn');
-    const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
-    const editForm = document.getElementById('edit-profile-form');
+    const editModal        = document.getElementById('edit-profile-modal');
+    const editModalContent = document.getElementById('edit-modal-content');
+    const openEditBtn      = document.getElementById('open-edit-modal-btn');
+    const closeEditBtn     = document.getElementById('close-edit-modal-btn');
+    const editProfileUrl   = "{% url 'auth_profil:edit_profile' %}";
 
-    if (openEditModalBtn) {
-        const closeEditModal = () => editModal.classList.add('hidden');
-        closeEditModalBtn.addEventListener('click', closeEditModal);
-        editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
-        editModal.addEventListener('click', (e) => { if (e.target.id === 'cancel-edit-btn') closeEditModal(); });
+    const closeEditModal = () => editModal.classList.add('hidden');
 
-        openEditModalBtn.addEventListener('click', () => {
-            editModal.classList.remove('hidden');
-        });
+    closeEditBtn?.addEventListener('click', closeEditModal);
+    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
 
-        editForm.addEventListener('submit', async (e) => {
+    openEditBtn?.addEventListener('click', async () => {
+        editModalContent.innerHTML = `
+            <div class="text-center p-8">
+                <div class="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>`;
+        editModal.classList.remove('hidden');
+
+        const html = await (await fetch(editProfileUrl, { credentials: 'same-origin' })).text();
+        editModalContent.innerHTML = html;
+
+        wireEditModal();
+    });
+
+    function wireEditModal() {
+        const modal = document.getElementById('edit-profile-modal');
+        const form  = document.getElementById('edit-profile-form');
+        if (!form) return;
+
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        cancelBtn?.addEventListener('click', () => modal.classList.add('hidden'));
+
+        // ---- Preview & drag-drop ----
+        const file  = form.querySelector('input[type="file"]');
+        const drop  = document.getElementById('editpf-dropzone');
+        const prev  = document.getElementById('editpf-preview');
+        const name  = document.getElementById('editpf-filename');
+        const errImg= document.getElementById('error-image');
+
+        const showPreview = (f) => {
+            if (!f) return;
+            name && (name.textContent = f.name);
+            errImg && (errImg.textContent = '');
+            if (!f.type.startsWith('image/')) { errImg && (errImg.textContent = 'File harus gambar.'); return; }
+            if (f.size > 3 * 1024 * 1024)    { errImg && (errImg.textContent = 'Maks 3MB.'); return; }
+            const reader = new FileReader();
+            reader.onload = (e) => { if (prev) prev.src = e.target.result; };
+            reader.readAsDataURL(f);
+        };
+
+        if (file) {
+            file.addEventListener('change', (e) => showPreview(e.target.files?.[0]));
+        }
+        if (drop && file) {
+            ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+                e.preventDefault(); e.stopPropagation(); drop.classList.add('bg-gray-800/70');
+            }));
+            ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+                e.preventDefault(); e.stopPropagation(); drop.classList.remove('bg-gray-800/70');
+            }));
+            drop.addEventListener('drop', (e) => {
+                const f = e.dataTransfer.files?.[0]; if (!f) return;
+                const dt = new DataTransfer(); dt.items.add(f); file.files = dt.files; showPreview(f);
+            });
+        }
+
+        // ---- Submit AJAX ----
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(editForm);
+            const fd = new FormData(form);
 
-            const usernameErr = document.getElementById('error-username');
-            if (usernameErr) usernameErr.textContent = '';
-
-            const submitBtn = editForm.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            const prev = submitBtn.textContent;
-            submitBtn.textContent = 'Saving...';
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const prevText  = submitBtn?.textContent || '';
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
 
             try {
-                const res = await fetch(editForm.action, {
-                method: 'POST',
-                body: new URLSearchParams(formData),
-                headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
+                const res  = await fetch(form.action, {
+                    method: 'POST',
+                    body: fd,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': fd.get('csrfmiddlewaretoken') || ''
+                    },
+                    credentials: 'same-origin'
                 });
+                const data = await res.json();
 
-                const isJson = res.headers.get('Content-Type')?.includes('application/json');
-                const data = isJson ? await res.json() : null;
+                if (res.ok && data.status === 'success') {
+                    const first = (fd.get('first_name') || '').toString().trim();
+                    const last  = (fd.get('last_name')  || '').toString().trim();
+                    const uname = (fd.get('username')   || '').toString().trim();
+                    const displayName = (first || last) ? `${first} ${last}`.trim() : uname;
+                    const nameEl = document.getElementById('profile-name');
+                    if (displayName && nameEl) nameEl.textContent = displayName;
 
-                if (res.ok && data?.status === 'success') {
-                const first = (formData.get('first_name') || '').trim();
-                const last  = (formData.get('last_name')  || '').trim();
-                const uname = (formData.get('username')   || '').trim();
-                const name = (first || last) ? `${first} ${last}`.trim() : uname;
-                const navUser = document.getElementById('nav-username');
-                const navAvatar = document.getElementById('nav-avatar');
-                if (navUser)   navUser.textContent = uname || name || navUser.textContent;
-                if (navAvatar) navAvatar.textContent = (uname || name || 'U')[0].toUpperCase();
-                
-                document.getElementById('profile-name').textContent =
-                    name || document.getElementById('profile-name').textContent;
-                document.getElementById('profile-avatar').textContent =
-                    (uname || name || 'U')[0].toUpperCase();
+                    const avatarImg    = document.getElementById('profile-avatar-img');
+                    let   avatarLetter = document.getElementById('profile-avatar');
 
-                SuccessModal.open(data.message || 'Profil berhasil diperbarui!');
-                editModal.classList.add('hidden');
-                return;
+                    if (data.new_image_url && !data.new_image_url.includes('default.jpg')) {
+                        if (avatarImg) avatarImg.src = data.new_image_url;
+                        if (!avatarImg && avatarLetter) {
+                            const img = document.createElement('img');
+                            img.id = 'profile-avatar-img';
+                            img.className = 'h-24 w-24 rounded-full object-cover';
+                            img.src = data.new_image_url;
+                            avatarLetter.replaceWith(img);
+                        }
+                    } else {
+                        if (avatarImg) {
+                            const div = document.createElement('div');
+                            div.id = 'profile-avatar';
+                            div.className = 'flex-shrink-0 h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-semibold text-white';
+                            div.textContent = (uname || displayName || 'U')[0].toUpperCase();
+                            avatarImg.replaceWith(div);
+                            avatarLetter = div;
+                        } else if (avatarLetter) {
+                            avatarLetter.textContent = (uname || displayName || 'U')[0].toUpperCase();
+                        }
+                    }
+
+                    const navUser   = document.getElementById('nav-username');
+                    const navImg    = document.getElementById('nav-avatar-img');
+                    const navLetter = document.getElementById('nav-avatar');
+
+                    if (navUser && (uname || displayName)) navUser.textContent = uname || displayName;
+
+                    if (data.new_image_url && !data.new_image_url.includes('default.jpg')) {
+                        if (navImg)  { navImg.src = data.new_image_url; navImg.classList.remove('hidden'); }
+                        if (navLetter) navLetter.classList.add('hidden');
+                    } else {
+                        if (navLetter) { navLetter.textContent = (uname || displayName || 'U')[0].toUpperCase(); navLetter.classList.remove('hidden'); }
+                        if (navImg)    navImg.classList.add('hidden');
+                    }
+
+                    SuccessModal.open(data.message || 'Profil berhasil diperbarui!');
+                    editModal.classList.add('hidden');
+                } else {
+                    if (data.errors?.username) {
+                        const errU = document.getElementById('error-username');
+                        if (errU) errU.textContent = data.errors.username.join(' ');
+                    }
+                    const others = Object.entries(data.errors || {})
+                        .filter(([k]) => k !== 'username').flatMap(([,v]) => v);
+                    if (others.length) alert(others.join('\n'));
                 }
-
-                if (data?.errors) {
-                if (data.errors.username && usernameErr) {
-                    usernameErr.textContent = data.errors.username.join(' ');
-                }
-                const otherErrors = Object.entries(data.errors)
-                    .filter(([k]) => k !== 'username')
-                    .flatMap(([, v]) => v);
-                if (otherErrors.length) alert(otherErrors.join('\n'));
-                return;
-                }
-
-                alert('Gagal menyimpan perubahan. Silakan coba lagi.');
             } catch (err) {
-                console.error('AJAX Error (edit):', err);
+                console.error(err);
                 alert('Terjadi kesalahan jaringan.');
             } finally {
-                submitBtn.textContent = prev;
-                submitBtn.disabled = false;
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevText; }
             }
         });
     }

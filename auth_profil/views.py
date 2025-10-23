@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, EditProfileForm, CustomPasswordChangeForm
+from .forms import CustomUserCreationForm, EditProfileForm, CustomPasswordChangeForm, UserUpdateForm, ProfileUpdateForm
 from django.http import JsonResponse
 import json
 
@@ -56,13 +56,28 @@ def profile_view(request):
     return render(request, 'profile.html', context)
 
 @login_required
-@require_POST
 def edit_profile_view(request):
-    form = EditProfileForm(request.POST, instance=request.user)
-    if form.is_valid():
-        form.save()
-        return JsonResponse({"status": "success", "message": "Profil berhasil diperbarui!"})
-    return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+    if request.method == 'POST':
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            u_form = UserUpdateForm(request.POST, instance=request.user)
+            p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+            
+            if u_form.is_valid() and p_form.is_valid():
+                u_form.save()
+                p_form.save()
+                return JsonResponse({
+                    'status': 'success', 
+                    'message': 'Profil berhasil diperbarui!',
+                    'new_image_url': request.user.profile.image.url
+                })
+            else:
+                errors = {**u_form.errors, **p_form.errors}
+                return JsonResponse({'status': 'error', 'errors': errors})
+    
+    u_form = UserUpdateForm(instance=request.user)
+    p_form = ProfileUpdateForm(instance=request.user.profile)
+    context = {'u_form': u_form, 'p_form': p_form}
+    return render(request, 'edit_profile.html', context)
 
 @login_required
 def delete_account_view(request):
