@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ jadwal.team_1 }} vs {{ jadwal.team_2 }}{% endblock title %}
+
+{% block content %}
+<div class="w-full max-w-3xl mx-auto mt-16 relative">
+  <div class="absolute -top-8 left-0">
+    <a href="{% url 'kalender:schedule_index' %}" 
+       class="text-gray-400 hover:text-white text-sm transition">
+      ← Back to Schedule
+    </a>
+  </div>
+
+  <div class="bg-[#1e1e1e] rounded-xl shadow-lg px-10 py-10 border border-gray-700 text-center">
+
+    <div class="flex items-center justify-center gap-6 mb-8 flex-wrap">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl font-bold text-white">{{ jadwal.team_1 }}</span>
+        {% if jadwal.team_1_logo %}
+          <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }}" class="w-12 h-12 rounded-full object-cover border border-gray-600">
+        {% else %}
+          <div class="w-12 h-12 rounded-full bg-gray-600 border border-gray-500"></div>
+        {% endif %}
+      </div>
+
+      <span class="text-2xl font-semibold text-gray-200">VS</span>
+
+      <div class="flex items-center gap-3">
+        {% if jadwal.team_2_logo %}
+          <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }}" class="w-12 h-12 rounded-full object-cover border border-gray-600">
+        {% else %}
+          <div class="w-12 h-12 rounded-full bg-gray-600 border border-gray-500"></div>
+        {% endif %}
+        <span class="text-2xl font-bold text-white">{{ jadwal.team_2 }}</span>
+      </div>
+    </div>
+
+    <div class="text-gray-300">
+      <p class="mb-1"><strong>Date:</strong> {{ jadwal.date|date:"l, j F Y" }}</p>
+      <p><strong>Time:</strong> {{ jadwal.time|time:"H:i" }}</p>
+    </div>
+
+    {% if jadwal.description %}
+    <div class="mt-8 bg-[#2a2a2a] text-gray-300 rounded-lg p-5 text-left border border-gray-700">
+      <h3 class="text-white font-semibold mb-2">Match Description</h3>
+      <p>{{ jadwal.description }}</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+      <a href="{% url 'kalender:export_kalender_ics' jadwal.id %}" 
+         class="inline-block bg-[#282828] hover:bg-[#3a3a3a] text-white font-medium px-5 py-3 rounded-lg border border-gray-600 transition">
+        📅 Export to Calendar (.ics)
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock content %}

@@ -26,7 +26,14 @@
               {{ field.label }}
             </label>
             <div class="w-full">
-              {% if field.field.widget.input_type == "date" %}
+              {% if field.name == "description" %}
+                <textarea
+                  name="{{ field.name }}"
+                  id="{{ field.id_for_label }}"
+                  rows="4"
+                  class="custom-input"
+                >{{ field.value|default_if_none:'' }}</textarea>
+              {% elif field.field.widget.input_type == "date" %}
                 <input
                   type="date"
                   name="{{ field.name }}"
@@ -97,6 +104,10 @@ document.addEventListener("DOMContentLoaded", function() {
       background-color: #222 !important;
       color: #fff !important;
       border-color: #666 !important;
+    }
+    textarea.custom-input {
+      resize: vertical;
+      min-height: 100px;
     }
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="time"]::-webkit-calendar-picker-indicator {

@@ -10,4 +10,5 @@ urlpatterns = [
     path('delete/<int:pk>/', views.delete_schedule_view, name='delete_schedule'),
     path('api/get_matches/', views.get_matches_api, name='get_matches_api'),
     path('export/<int:kalender_id>/', views.export_kalender_ics, name='export_kalender_ics'),
+    path('detail/<int:pk>/', views.schedule_detail_view, name='schedule_detail'), 
 ]
