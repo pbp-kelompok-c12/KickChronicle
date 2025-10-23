@@ -28,7 +28,10 @@
         }
     </script>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="{% static 'css/global.css' %}">
+
+    {% block extra_head %}{% endblock extra_head %}
 </head>
 <body class="bg-background text-foreground">
     
@@ -39,24 +42,26 @@
     </main>
 
     {% block scripts %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const userMenuButton = document.getElementById('user-menu-button');
-        const userMenu = document.getElementById('user-menu');
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
 
-        if (userMenuButton && userMenu) {
-            userMenuButton.addEventListener('click', function() {
-                userMenu.classList.toggle('hidden');
-            });
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function() {
+                    userMenu.classList.toggle('hidden');
+                });
 
-            document.addEventListener('click', function(event) {
-                if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
-                    userMenu.classList.add('hidden');
-                }
-            });
-        }
-    });
-    </script>
-    {% endblock %}
+                document.addEventListener('click', function(event) {
+                    if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+        </script>
+    {% endblock scripts %}
 </body>
 </html>

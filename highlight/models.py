@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils import timezone
 from embed_video.backends import detect_backend,UnknownBackendException
 
 class Highlight(models.Model):
@@ -13,6 +14,7 @@ class Highlight(models.Model):
         help_text="Enter URL for a thumbnail if the video URL isn't from YouTube/Vimeo."
     )
     description = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
     # mungkin ada field tim
     
     def __str__(self):
