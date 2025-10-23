@@ -1,0 +1,70 @@
+<form id="edit-profile-form" method="POST" action="{% url 'auth_profil:edit_profile' %}" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <div>
+        <h2 class="text-xl font-semibold text-foreground">Edit profile</h2>
+        <p class="mt-1 text-sm text-muted-foreground">Perbarui identitas dan foto profil kamu.</p>
+    </div>
+
+    <!-- Grid input -->
+    <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+            <label for="{{ u_form.username.id_for_label }}" class="block text-sm font-medium mb-1">Username</label>
+            {{ u_form.username }}
+            <div id="error-username" class="mt-2 text-xs text-red-400"></div>
+        </div>
+
+        <div>
+            <label for="{{ u_form.first_name.id_for_label }}" class="block text-sm font-medium mb-1">First Name</label>
+            {{ u_form.first_name }}
+        </div>
+
+        <div class="sm:col-span-2">
+            <label for="{{ u_form.last_name.id_for_label }}" class="block text-sm font-medium mb-1">Last Name</label>
+            {{ u_form.last_name }}
+        </div>
+    </div>
+
+    <!-- Profile picture -->
+    <div class="space-y-3">
+        <label class="block text-sm font-medium">Profile Picture</label>
+
+        <div class="flex items-start gap-4">
+            <!-- Preview bulat -->
+            <img id="editpf-preview"
+                src="{{ request.user.profile.image.url }}"
+                class="h-16 w-16 rounded-full object-cover border border-border/50"
+                alt="Preview">
+
+            <!-- Dropzone -->
+            <div id="editpf-dropzone" class="flex-1 rounded-xl border border-dashed border-border/60 p-4">
+                <p class="text-sm text-muted-foreground"> Pilih atau tarik file ke sini (PNG/JPG, maks 3MB) </p>
+
+                <div class="mt-3 flex items-center gap-3">
+                    <!-- Tombol trigger input file -->
+                    <label for="id_image"
+                            class="inline-block cursor-pointer rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                        Pilih file
+                    </label>
+                    <span id="editpf-filename" class="text-sm text-muted-foreground truncate"></span>
+                </div>
+
+                <!-- Ini input file dari form -->
+                {{ p_form.image }}
+                <div id="error-image" class="mt-2 text-xs text-red-400"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3 pt-2">
+        <button type="button" id="cancel-edit-btn" class="w-full sm:w-auto flex-1 text-center py-3 font-semibold bg-gray-700 hover:bg-gray-600 rounded-lg"> Cancel </button>
+        <button type="submit" class="w-full sm:w-auto flex-1 py-3 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg"> Save Changes </button>
+    </div>
+</form>
+
+<script>
+    document.getElementById('cancel-edit-btn')?.addEventListener('click', () => {
+        document.getElementById('edit-profile-modal')?.classList.add('hidden');
+    });
+</script>

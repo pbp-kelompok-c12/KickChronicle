@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kick Chronicle{% endblock %}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'var(--border)',
+                        ring: 'var(--ring)',
+                        background: 'var(--background)',
+                        foreground: 'var(--foreground)',
+                        primary: { DEFAULT: 'var(--primary)', foreground: 'var(--primary-foreground)' },
+                        destructive: { DEFAULT: 'var(--destructive)' },
+                        muted: { foreground: 'var(--muted-foreground)' },
+                        accent: { DEFAULT: 'var(--accent)' },
+                        card: { DEFAULT: 'var(--card)', foreground: 'var(--card-foreground)' },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
+
+    {% block extra_head %}{% endblock extra_head %}
+</head>
+<body class="bg-background text-foreground">
+    
+    {% include 'navbar.html' %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function() {
+                    userMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+        </script>
+    {% endblock scripts %}
+</body>
+</html>
