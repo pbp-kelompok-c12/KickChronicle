@@ -7,6 +7,7 @@ from highlight.models import Highlight
 from highlight.forms import HighlightForm, HiglightFormCsv
 from django.contrib import messages
 from django.db import transaction
+from komen_like_rate.models import Favorite
 
 def show_main_page(request):
     query = request.GET.get('q')
