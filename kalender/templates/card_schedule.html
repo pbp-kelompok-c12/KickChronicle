@@ -1,44 +1,47 @@
-<div class="relative group bg-[#282828] rounded-lg p-5 shadow-md flex items-center justify-between overflow-hidden" id="schedule-card-{{ jadwal.id }}">
-  <a href="{% url 'kalender:schedule_detail' pk=jadwal.id %}" class="absolute inset-0 z-10"></a>
-  <div class="relative z-20 flex items-center justify-between w-full">
-    <div class="flex items-center gap-4">
-      {% if user.is_superuser %}
-      <a href="{% url 'kalender:edit_schedule' pk=jadwal.id %}" 
-         class="edit-btn bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition relative z-30">
-        Edit
-      </a>
-      {% endif %}
+{% if user.is_staff %}
+    <div class="flex items-center gap-x-4">
+        
+        <a href="{% url 'kalender:edit_schedule' pk=jadwal.id %}" 
+           class="edit-btn flex-shrink-0 bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">
+           Edit
+        </a>
 
-      <div class="flex items-center gap-3 {% if user.is_superuser %}ml-10{% endif %}">
-        <span class="font-bold text-lg text-white">{{ jadwal.team_1 }}</span>
-        {% if jadwal.team_1_logo %}
-          <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }} logo" class="w-12 h-12 rounded-full object-cover">
-        {% else %}
-          <div class="w-12 h-12 bg-gray-600 rounded-full"></div>
-        {% endif %}
-      </div>
+        <div class="flex-1 bg-[#282828] rounded-lg p-4 shadow-md schedule-card cursor-pointer" data-id="{{ jadwal.id }}">
+            <div class="flex items-center justify-between gap-x-4">
+                <div class="flex flex-1 items-center justify-end gap-x-3 min-w-0">
+                    <span class="text-right text-white font-semibold truncate">{{ jadwal.team_1 }}</span>
+                    <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }} logo" class="h-10 w-10 rounded-full object-cover">
+                </div>
+                <div class="flex-none text-white font-bold text-xl text-center">
+                    {{ jadwal.time|time:"H:i" }}
+                </div>
+                <div class="flex flex-1 items-center justify-start gap-x-3 min-w-0">
+                    <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }} logo" class="h-10 w-10 rounded-full object-cover">
+                    <span class="text-left text-white font-semibold truncate">{{ jadwal.team_2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <button data-id="{{ jadwal.id }}" 
+           class="delete-btn flex-shrink-0 bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">
+           Delete
+        </button>
     </div>
 
-    <div class="text-center">
-      <span class="font-bold text-white">{{ jadwal.time|time:"H:i" }}</span>
-    </div>
-
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-3 {% if user.is_superuser %}mr-10{% endif %}">
-        {% if jadwal.team_2_logo %}
-          <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }} logo" class="w-12 h-12 rounded-full object-cover">
-        {% else %}
-          <div class="w-12 h-12 bg-gray-600 rounded-full"></div>
-        {% endif %}
-        <span class="font-bold text-lg text-white">{{ jadwal.team_2 }}</span>
-      </div>
-
-      {% if user.is_superuser %}
-      <button data-id="{{ jadwal.id }}" 
-              class="delete-btn bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition relative z-30">
-        Delete
-      </button>
-      {% endif %}
-    </div>
-  </div>
-</div>
+{% else %}
+    <a href="{% url 'kalender:schedule_detail' pk=jadwal.id %}" class="block bg-[#282828] rounded-lg p-4 shadow-md schedule-card">
+        <div class="flex items-center justify-between gap-x-4">
+            <div class="flex flex-1 items-center justify-end gap-x-3 min-w-0">
+                <span class="text-right text-white font-semibold truncate">{{ jadwal.team_1 }}</span>
+                <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }} logo" class="h-10 w-10 rounded-full object-cover">
+            </div>
+            <div class="flex-none text-white font-bold text-xl text-center">
+                {{ jadwal.time|time:"H:i" }}
+            </div>
+            <div class="flex flex-1 items-center justify-start gap-x-3 min-w-0">
+                <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }} logo" class="h-10 w-10 rounded-full object-cover">
+                <span class="text-left text-white font-semibold truncate">{{ jadwal.team_2 }}</span>
+            </div>
+        </div>
+    </a>
+{% endif %}

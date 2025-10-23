@@ -8,18 +8,23 @@ from highlight.forms import HighlightForm, HiglightFormCsv
 from django.contrib import messages
 from django.db import transaction
 from komen_like_rate.models import Favorite
+from django.core.paginator import Paginator
 
 def show_main_page(request):
     query = request.GET.get('q')
 
     if query:
-        highlight_list = Highlight.objects.filter(name__icontains=query)
+        highlight_list = Highlight.objects.filter(name__icontains=query).order_by('-id')
     else:
-        highlight_list = Highlight.objects.all()
+        highlight_list = Highlight.objects.all().order_by('-id')
     
+    paginator = Paginator(highlight_list, 12)  # <-- Show 12 highlights per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'highlight_list': highlight_list,
-        
+        # 'highlight_list': highlight_list, # <-- Don't send the full list
+        'page_obj': page_obj,              # <-- Send the paginated page object
     }
     return render(request, "highlight_main.html", context)
 
@@ -120,6 +125,18 @@ def add_highlights_csv(request):
                         # Optional fields (check if columns exist before accessing)
                         description_val = row[2].strip() if len(row) > 2 and row[2] else "" # Default to empty string
                         thumbnail_url_val = row[3].strip() if len(row) > 3 and row[3] else None # Default to None
+                        
+                        season_val = row[4].strip()
+                        season_mapping = {
+                            '2022/2023': '22/23',
+                            '2023/2024': '23/24',
+                            '2024/2025': '24/25',
+                        }
+
+                        if season_val in season_mapping:
+                            season_val = season_mapping[season_val]
+                        elif season_val not in season_mapping.values():
+                            season_val = None
 
                         # Basic Validation
                         # if not name_val:
@@ -135,7 +152,8 @@ def add_highlights_csv(request):
                                 name=name_val,
                                 url=url_val,
                                 description=description_val,
-                                manual_thumbnail_url=thumbnail_url_val
+                                manual_thumbnail_url=thumbnail_url_val,
+                                season=season_val
                                 # created_at is handled automatically by the model's default
                             )
                         )
@@ -168,7 +186,7 @@ def add_highlights_csv(request):
                 # except Exception as e:
                 #     messages.error(request, f'An unexpected error occurred during import: {e}')
 
-                return redirect('highlight:add_highlight_csv')
+                return redirect('highlight:show_main_page')
         else: # GET request
             form = HiglightFormCsv()
         return render(request, 'add_highlight_csv.html', {'form': form})

@@ -8,7 +8,6 @@
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-
   .flatpickr-calendar {
     background-color: #1e1e1e !important;
     border: 1px solid #333 !important;
@@ -16,15 +15,12 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
     color: #fff !important;
   }
-
   .flatpickr-months, .flatpickr-weekdays {
     background-color: #1e1e1e !important;
   }
-
   .flatpickr-current-month {
     color: #fff !important;
   }
-
   .flatpickr-current-month input.cur-year,
   .flatpickr-monthDropdown-months {
     background: #1e1e1e !important;
@@ -32,89 +28,39 @@
     border: none !important;
     font-weight: 600;
   }
-
   .flatpickr-day {
     color: #e0e0e0 !important;
     background-color: #1e1e1e !important;
   }
-
   .flatpickr-day:hover {
     background-color: #2e2e2e !important;
   }
-
   .flatpickr-day.today {
     border-color: #555 !important;
     background-color: #2f2f2f !important;
     color: #fff !important;
   }
-
   .flatpickr-day.selected {
     background: #4b6cb7 !important;
     border-color: #4b6cb7 !important;
     color: #fff !important;
   }
-
   .flatpickr-prev-month svg,
   .flatpickr-next-month svg {
     fill: #fff !important;
   }
-
   .flatpickr-prev-month:hover svg,
   .flatpickr-next-month:hover svg {
     fill: #ccc !important;
   }
-
   .flatpickr-calendar.open {
     left: 50% !important;
     transform: translateX(-50%) !important;
     margin-top: 50px !important;
   }
-
   #calendar-header {
     background-color: #282828;
   }
-
-  #match-list img {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-  }
-
-  .match-grid {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    text-align: center;
-    gap: 6rem;
-  }
-
-  .team-name {
-    font-weight: 700;
-    font-size: 1.125rem;
-    color: white;
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .match-time {
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 1.25rem;
-    min-width: 80px;
-  }
-
-  @media (max-width: 640px) {
-    .match-grid {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-    .match-grid > div {
-      justify-content: center !important;
-    }
-  }
-
   .schedule-card:hover {
     background-color: #303030;
     transition: background-color 0.2s ease;
@@ -131,12 +77,17 @@
     <input type="text" id="datepicker" class="sr-only" aria-hidden="true" />
   </div>
 
-  {% if user.is_superuser %}
-  <div class="text-center mb-8">
-    <a href="{% url 'kalender:add_schedule' %}"
-       class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
-      Add Schedule
-    </a>
+ {% if user.is_superuser %}
+  <div class="flex justify-center gap-4 mb-8">
+      <a href="{% url 'kalender:add_schedule' %}"
+        class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
+        Add Schedule
+      </a>
+
+      <a href="{% url 'kalender:import_schedule_csv' %}"
+        class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
+        Import CSV
+      </a>
   </div>
   {% endif %}
 
@@ -194,7 +145,7 @@
     const nextBtn = document.getElementById("next-day");
     const matchListDiv = document.getElementById("match-list");
     const dateInput = document.getElementById("datepicker");
-    let currentDate = new Date();
+    let currentDate = new Date("{{ selected_date|date:'Y-m-d' }}T12:00:00");
     let scheduleIdToDelete = null;
     const deleteModal = document.getElementById('delete-modal');
     const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
@@ -243,62 +194,56 @@
           }
 
           data.matches.forEach(match => {
-            const team1Logo = match.team_1_logo
-              ? `<img src="${match.team_1_logo}" alt="${match.team_1}" class="rounded-full">`
-              : `<div class="w-12 h-12 bg-gray-600 rounded-full"></div>`;
-            const team2Logo = match.team_2_logo
-              ? `<img src="${match.team_2_logo}" alt="${match.team_2}" class="rounded-full">`
-              : `<div class="w-12 h-12 bg-gray-600 rounded-full"></div>`;
+              const team1Logo = match.team_1_logo ? `<img src="${match.team_1_logo}" alt="${match.team_1}" class="h-10 w-10 rounded-full object-cover">` : '';
+              const team2Logo = match.team_2_logo ? `<img src="${match.team_2_logo}" alt="${match.team_2}" class="h-10 w-10 rounded-full object-cover">` : '';
+              const editUrl = `/kalender/edit/${match.id}/`;
+              const detailUrl = `/kalender/detail/${match.id}/`;
 
-            const editUrl = `/kalender/edit/${match.id}/`;
-            const detailUrl = `/kalender/detail/${match.id}/`;
-
-            const matchHTML = `
-              <div class="bg-[#282828] rounded-lg p-5 shadow-md relative flex items-center justify-between schedule-card cursor-pointer"
-                   id="schedule-card-${match.id}" data-id="${match.id}">
-                ${IS_ADMIN ? `
-                  <a href="${editUrl}" 
-                    class="bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition relative z-10">
-                    Edit
-                  </a>
-                ` : ""}
-
-                <div class="grid grid-cols-3 items-center justify-items-center flex-1">
-                  <div class="flex items-center justify-end gap-2 w-full">
-                    <span class="team-name text-white font-semibold text-lg">${match.team_1}</span>
-                    ${team1Logo.replace('class="rounded-full"', 'class="rounded-full ml-5"')}
-                  </div>
-
-                  <div class="text-white font-bold text-xl text-center w-full">
-                    ${match.start_time}
-                  </div>
-
-                  <div class="flex items-center justify-start gap-2 w-full">
-                    ${team2Logo.replace('class="rounded-full"', 'class="rounded-full mr-5"')}
-                    <span class="team-name text-white font-semibold text-lg">${match.team_2}</span>
-                  </div>
+              const cardContentHTML = `
+                <div class="flex items-center justify-between gap-x-4">
+                    <div class="flex flex-1 items-center justify-end gap-x-3 min-w-0">
+                        <span class="text-right text-white font-semibold truncate">${match.team_1}</span>
+                        ${team1Logo}
+                    </div>
+                    <div class="flex-none text-white font-bold text-xl text-center">
+                        ${match.start_time}
+                    </div>
+                    <div class="flex flex-1 items-center justify-start gap-x-3 min-w-0">
+                        ${team2Logo}
+                        <span class="text-left text-white font-semibold truncate">${match.team_2}</span>
+                    </div>
                 </div>
+              `;
 
-                ${IS_ADMIN ? `
-                  <button data-id="${match.id}" 
-                    class="delete-btn bg-black hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-md border border-white transition relative z-10">
-                    Delete
-                  </button>
-                ` : ""}
-              </div>
-            `;
+              let finalHTML;
 
-            matchListDiv.innerHTML += matchHTML;
+              if (IS_ADMIN) {
+                finalHTML = `
+                  <div class="flex items-center gap-x-4">
+                      <a href="${editUrl}" class="edit-btn flex-shrink-0 bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">Edit</a>
+                      <div class="flex-1 bg-[#282828] rounded-lg p-4 shadow-md schedule-card cursor-pointer" data-id="${match.id}">
+                          ${cardContentHTML}
+                      </div>
+                      <button data-id="${match.id}" class="delete-btn flex-shrink-0 bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">Delete</button>
+                  </div>
+                `;
+              } else {
+                finalHTML = `
+                  <a href="${detailUrl}" class="block bg-[#282828] rounded-lg p-4 shadow-md schedule-card">
+                      ${cardContentHTML}
+                  </a>
+                `;
+              }
+              
+              matchListDiv.innerHTML += finalHTML;
           });
         })
         .then(() => {
-          document.querySelectorAll(".schedule-card").forEach(card => {
-            card.addEventListener("click", e => {
-              const isButton = e.target.closest(".delete-btn, a");
-              if (!isButton) {
-                const id = card.dataset.id;
-                window.location.href = `/kalender/detail/${id}/`;
-              }
+          document.querySelectorAll('.schedule-card').forEach(card => {
+            card.addEventListener('click', e => {
+              if (e.target.closest('a, button')) return;
+              const id = card.dataset.id;
+              window.location.href = `/kalender/detail/${id}/`;
             });
           });
         });
@@ -333,20 +278,22 @@
 
     confirmDeleteBtn.addEventListener("click", async () => {
       if (!scheduleIdToDelete) return;
+      const cardWrapper = document.querySelector(`.delete-btn[data-id="${scheduleIdToDelete}"]`).closest('.flex.items-center.gap-x-4');
+
       const res = await fetch(`/kalender/delete/${scheduleIdToDelete}/`, {
         method: "DELETE",
         headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
       });
       const data = await res.json();
       if (data.success) {
-        document.getElementById(`schedule-card-${scheduleIdToDelete}`).remove();
+        if (cardWrapper) {
+            cardWrapper.remove();
+        }
       }
       deleteModal.classList.add("hidden");
       scheduleIdToDelete = null;
     });
-
     updateDisplay();
-    loadMatches();
   });
 </script>
 {% endblock scripts %}
