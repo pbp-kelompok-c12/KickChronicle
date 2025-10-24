@@ -9,7 +9,7 @@
         <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
         <div id="modal-content">
             <h2 class="heading-md text-foreground mb-2">Reset Password</h2>
-            <p class="text-muted-foreground mb-6">Masukkan alamat email Anda, dan kami akan mengirimkan instruksi untuk mereset password Anda.</p>
+            <p class="text-muted-foreground mb-6">Enter your email address, and we'll send you instructions to reset your password.</p>
             {% include 'password_reset_form.html' %}
         </div>
     </div>
@@ -109,13 +109,13 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => {
                 if (response.ok) {
                     modalContent.innerHTML = `
-                        <h2 class="heading-md text-foreground mb-2">Cek Email Anda</h2>
-                        <p class="text-muted-foreground">Prosedur untuk mengubah password sudah dikirimkan ke email Anda. Silakan periksa kotak masuk Anda.</p>
+                        <h2 class="heading-md text-foreground mb-2">Check your Email</h2>
+                        <p class="text-muted-foreground">We've sent you an email with instructions for resetting your password. Please check your inbox or spam.</p>
                     `;
                 } else {
                     modalContent.innerHTML = `
-                        <h2 class="heading-md text-red-500 mb-2">Terjadi Kesalahan</h2>
-                        <p class="text-muted-foreground">Tidak dapat mengirim email reset. Pastikan email yang Anda masukkan sudah benar dan terdaftar.</p>
+                        <h2 class="heading-md text-red-500 mb-2">Error</h2>
+                        <p class="text-muted-foreground">Unable to send reset email. Please ensure the email address you entered is correct and registered.</p>
                         <button onclick="location.reload()" class="mt-4 w-full py-2 font-semibold bg-primary text-primary-foreground rounded-lg">Coba Lagi</button>
                     `;
                 }

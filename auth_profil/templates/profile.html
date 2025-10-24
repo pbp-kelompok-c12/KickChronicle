@@ -60,7 +60,7 @@
             </div>
             <div class="ml-auto w-full sm:w-auto mt-4 sm:mt-0">
                 <div class="flex justify-start sm:justify-end gap-3">
-                    <a href="#" class="px-4 py-2 rounded-lg border border-border/50 hover:bg-gray-800/50">Favorite</a>
+                    <a href="{% url 'komen_like_rate:favorite_list' %}" class="px-4 py-2 rounded-lg border border-border/50 hover:bg-gray-800/50">Favorite</a>
                     <a href="{% url 'auth_profil:logout' %}" class="px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">Sign Out</a>
                 </div>
             </div>
