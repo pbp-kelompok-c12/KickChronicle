@@ -219,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const fd = new FormData(form);
 
+            const csrf = fd.get('csrfmiddlewaretoken') || (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/)?.[1] || '');
             const submitBtn = form.querySelector('button[type="submit"]');
             const prevText  = submitBtn?.textContent || '';
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
@@ -228,14 +229,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     method: 'POST',
                     body: fd,
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-CSRFToken': csrf,
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                     credentials: 'same-origin',
-                    body: new URLSearchParams(formData),
                 });
-                const data = await res.json();
+
+                const isJson = res.headers.get('Content-Type')?.includes('application/json');
+                const data = isJson ? await res.json() : null;
 
                 if (res.ok && data.status === 'success') {
                     const first = (fd.get('first_name') || '').toString().trim();
@@ -252,39 +253,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     const url = rawUrl + (rawUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
 
                     const profileImg = document.getElementById('profile-avatar-img');
-                    if (profileImg) {
-                        profileImg.src = url;
-                    } else {
-                        const img = document.createElement('img');
-                        img.id = 'profile-avatar-img';
-                        img.className = 'h-24 w-24 rounded-full object-cover';
-                        img.src = url;
-                        const letter = document.getElementById('profile-avatar');
-                        if (letter) letter.replaceWith(img);
-                    }
-
+                    if (profileImg) profileImg.src = url;
                     const navImg = document.getElementById('nav-avatar-img');
-                    if (navImg) {
-                        navImg.src = url;
-                        navImg.classList.remove('hidden');
-                    }
+                    if (navImg) { navImg.src = url; navImg.classList.remove('hidden'); }
 
-                    const navUser   = document.getElementById('nav-username');
+                    const navUser = document.getElementById('nav-username');
                     if (navUser && (uname || displayName)) navUser.textContent = uname || displayName;
 
-                    SuccessModal.open(data.message || 'Profil berhasil diperbarui!');
-                    editModal.classList.add('hidden');
-                } else {
-                    if (data.errors?.username) {
-                        const errU = document.getElementById('error-username');
-                        if (errU) errU.textContent = data.errors.username.join(' ');
-                    }
-                    const others = Object.entries(data.errors || {})
-                        .filter(([k]) => k !== 'username').flatMap(([,v]) => v);
-                    if (others.length) alert(others.join('\n'));
+                    SuccessModal.open(data?.message || 'Profil berhasil diperbarui!');
+                    document.getElementById('edit-profile-modal')?.classList.add('hidden');
+                    return;
                 }
+
+                if (data?.errors) {
+                    const uErr = data.errors.username?.map(e => e.message).join(' ');
+                    if (uErr) { const el = document.getElementById('error-username'); if (el) el.textContent = uErr; }
+
+                    const others = Object.entries(data.errors)
+                        .filter(([k]) => k !== 'username')
+                        .flatMap(([, arr]) => arr.map(e => e.message));
+                    if (others.length) alert(others.join('\n'));
+                    return;
+                }
+
+                const fallback = await res.text();
+                console.error('Non-JSON response', res.status, fallback);
+                alert('Gagal menyimpan. Coba refresh halaman.');
             } catch (err) {
-                console.error(err);
+                console.error('AJAX error:', err);
                 alert('Terjadi kesalahan jaringan.');
             } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevText; }
