@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm, SetPasswordForm, PasswordChangeForm
 from django import forms
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from .models import Profile
 
@@ -64,6 +65,16 @@ class CustomPasswordChangeForm(PasswordChangeForm):
             'class': tailwind_classes,
             'placeholder': 'Confirm your new password'
         })
+
+    def clean(self):
+        cleaned = super().clean()
+        old_pw = cleaned.get('old_password')
+        new_pw = cleaned.get('new_password1')
+        if old_pw and new_pw and old_pw == new_pw:
+            msg = "New password must be different from the current password."
+            self.add_error('new_password1', msg)
+            self.add_error('new_password2', msg)
+        return cleaned
 
 class UserUpdateForm(forms.ModelForm):
     class Meta:

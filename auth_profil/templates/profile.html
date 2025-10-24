@@ -228,10 +228,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     method: 'POST',
                     body: fd,
                     headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': fd.get('csrfmiddlewaretoken') || ''
                     },
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    body: new URLSearchParams(formData),
                 });
                 const data = await res.json();
 
@@ -318,6 +320,19 @@ document.addEventListener('DOMContentLoaded', function () {
             const prev = submitBtn.textContent;
             submitBtn.textContent = 'Saving...';
 
+            const oldPw = (formData.get('old_password') || '').toString();
+            const newPw = (formData.get('new_password1') || '').toString();
+            if (oldPw && newPw && oldPw === newPw) {
+                const msg = 'New password must be different from the current password.';
+                document.getElementById('error-new_password1').textContent = msg;
+                document.getElementById('error-new_password2').textContent = msg;
+
+                submitBtn.textContent = prev;
+                submitBtn.disabled = false;
+                document.getElementById('id_new_password1')?.focus();
+                return;
+            }
+
             try {
                 const res = await fetch(passwordForm.action, {
                 method: 'POST',
@@ -332,10 +347,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const data = isJson ? await res.json() : null;
 
                 if (res.ok && data?.status === 'success') {
-                SuccessModal.open(data.message || 'Password berhasil diperbarui!');
-                passwordForm.reset();
-                passwordModal.classList.add('hidden');
-                return;
+                    SuccessModal.open(data.message || 'Password berhasil diperbarui!');
+                    passwordForm.reset();
+                    passwordModal.classList.add('hidden');
+                    return;
                 }
 
                 if (data?.errors) {

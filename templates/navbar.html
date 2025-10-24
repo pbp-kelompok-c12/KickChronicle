@@ -5,9 +5,9 @@
 {% url 'tim:standings_page' as url_team %}
 
 <div class="sticky top-0 z-[60]" aria-hidden="true" style="height: max(8px, env(safe-area-inset-top));"></div>
-<nav class="sticky top-2 z-50 bg-[#0c0c0f]/80 backdrop-blur-md border-b border-white/10 rounded-b-2xl shadow-[0_6px_20px_-10px_rgba(0,0,0,0.6)]" role="navigation">
+<nav class="sticky top-2 z-50 bg-[#0c0c0f]/80 backdrop-blur-md border-b border-white/10 rounded-b-2xl shadow-[0_6px_20px_-10px_rgba(0,0,0,0.6)] px-0 py-2 md:py-3 mb-4 md:mb-6" role="navigation">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex h-18 items-center justify-between">
+    <div class="flex min-h-[56px] items-center justify-between">
       <!-- logo + desktop -->
       <div class="flex items-center gap-4">
         <a href="/" class="flex items-center gap-3">
@@ -21,23 +21,26 @@
         <div class="hidden md:flex items-center gap-1 ml-2">
           {% with p=request.path %}
           <a href="{{ url_highlight }}"
-             class="px-4 py-2 rounded-xl text-[15px] font-medium
-                    {% if p == url_highlight %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+            class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if request.path == url_highlight %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
             Highlight
           </a>
-          <a href="{{ url_schedule }}"
-             class="px-4 py-2 rounded-xl text-[15px] font-medium
-                    {% if p == url_schedule %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+
+          <a href="{% if user.is_authenticated %}{{ url_schedule }}{% else %}{% url 'auth_profil:login' %}?next={{ url_schedule|urlencode }}{% endif %}"
+            class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if request.path == url_schedule %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
             Schedule
           </a>
-          <a href="{{ url_toprated }}"
-             class="px-4 py-2 rounded-xl text-[15px] font-medium
-                    {% if p == url_toprated %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+
+          <a href="{% if user.is_authenticated %}{{ url_toprated }}{% else %}{% url 'auth_profil:login' %}?next={{ url_toprated|urlencode }}{% endif %}"
+            class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if request.path == url_toprated %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
             Top Rated
           </a>
-          <a href="{{ url_team }}"
-             class="px-4 py-2 rounded-xl text-[15px] font-medium
-                    {% if p == url_team %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+
+          <a href="{% if user.is_authenticated %}{{ url_team }}{% else %}{% url 'auth_profil:login' %}?next={{ url_team|urlencode }}{% endif %}"
+            class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if request.path == url_team %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
             Team
           </a>
           {% endwith %}
@@ -52,11 +55,11 @@
                   class="flex items-center gap-3 px-3.5 py-2 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
                   aria-expanded="false" aria-controls="user-menu">
             {% if user.profile.image %}
-              <img class="h-9 w-9 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
+              <img id="nav-avatar-img" class="h-9 w-9 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
             {% else %}
-              <img class="h-9 w-9 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
+              <img id="nav-avatar-img" class="h-9 w-9 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
             {% endif %}
-            <span class="hidden sm:inline text-[15px] font-medium text-gray-100">{{ user.username }}</span>
+            <span id="nav-username" class="hidden sm:inline text-[15px] font-medium text-gray-100">{{ user.username }}</span>
           </button>
 
           <!-- dropdown user -->
@@ -101,9 +104,10 @@
   <div id="mobile-menu" class="md:hidden hidden border-t border-white/10 bg-[#0f0f12]/95 backdrop-blur">
     <div class="px-4 pt-3 pb-4 space-y-1">
       <a href="{{ url_highlight }}" class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Highlight</a>
-      <a href="{{ url_schedule }}"  class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Schedule</a>
-      <a href="{{ url_toprated }}"  class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Top Rated</a>
-      <a href="{{ url_team }}"      class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Team</a>
+      <a href="{% if user.is_authenticated %}{{ url_schedule }}{% else %}{% url 'auth_profil:login' %}?next={{ url_schedule|urlencode }}{% endif %}" class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Schedule</a>
+      <a href="{% if user.is_authenticated %}{{ url_toprated }}{% else %}{% url 'auth_profil:login' %}?next={{ url_toprated|urlencode }}{% endif %}" class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Top Rated</a>
+      <a href="{% if user.is_authenticated %}{{ url_team }}{% else %}{% url 'auth_profil:login' %}?next={{ url_team|urlencode }}{% endif %}" class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Team</a>
+
 
       {% if user.is_authenticated %}
       <div class="mt-2 border-t border-white/10 pt-2">
