@@ -18,12 +18,12 @@
 
       <!-- Video Player Section - Always Manual Iframe -->
       <div class="bg-black"> 
-        {% video highlight.url|force_https as my_video %}
+        {% video highlight.url as my_video %}
           <div class="aspect-[16/9] relative">
             <iframe 
               class="absolute top-0 left-0 w-full h-full"
               
-              src="{% if highlight.is_embeddable and my_video %}{{ my_video.url }}{% else %}{{ highlight.url }}{% endif %}" 
+              src="{% if highlight.is_embeddable and my_video %}{{ my_video.url|force_https }}{% else %}{{ highlight.url|force_https }}{% endif %}" 
               
               style="border:none;" 
               allowfullscreen 
