@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
+from django.db.models.functions import Coalesce
 from django.db import transaction
 from .models import Rating, Comment, Favorite
 from .forms import RatingForm, CommentForm
@@ -107,18 +108,19 @@ def submit_rating(request):
     return JsonResponse({'status': 'success', 'rating': rating.value})
     
 def top_rated(request):
-    from django.db.models import Avg
-    from highlight.models import Highlight
-
     highlights = Highlight.objects.all()
     start = request.GET.get('start_date')
     end = request.GET.get('end_date')
+
     if start:
         highlights = highlights.filter(created_at__date__gte=start)
     if end:
         highlights = highlights.filter(created_at__date__lte=end)
-    highlights = highlights.annotate(avg_rating=Avg('rating__value')).order_by('-avg_rating')[:10]
-    
+
+    highlights = highlights.annotate(
+        avg_rating=Coalesce(Avg('rating__value'), 0.0)
+    ).order_by('-avg_rating')[:10]
+
     return render(request, 'komen_like_rate/top_rated.html', {
         'highlights': highlights,
         'start_date': start,
