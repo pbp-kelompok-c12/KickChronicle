@@ -52,11 +52,11 @@
                   class="flex items-center gap-3 px-3.5 py-2 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
                   aria-expanded="false" aria-controls="user-menu">
             {% if user.profile.image %}
-              <img class="h-9 w-9 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
+              <img id="nav-avatar-img" class="h-9 w-9 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
             {% else %}
-              <img class="h-9 w-9 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
+              <img id="nav-avatar-img" class="h-9 w-9 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
             {% endif %}
-            <span class="hidden sm:inline text-[15px] font-medium text-gray-100">{{ user.username }}</span>
+            <span id="nav-username" class="hidden sm:inline text-[15px] font-medium text-gray-100">{{ user.username }}</span>
           </button>
 
           <!-- dropdown user -->
