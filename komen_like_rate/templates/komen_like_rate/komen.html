@@ -65,7 +65,7 @@
         <p class="mt-3 text-zinc-100 leading-relaxed">{{ comment.content }}</p>
       </div>
     {% empty %}
-      <p id="emptyState" class="text-zinc-400">Belum ada komentar.</p>
+      <p id="emptyState" class="text-zinc-400">No comments yet.</p>
     {% endfor %}
   </div>
   </div>
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const p = document.createElement('p');
         p.id = 'emptyState';
         p.className = 'text-gray-500';
-        p.textContent = 'Belum ada komentar.';
+        p.textContent = 'No comments yet.';
         list.appendChild(p);
       }
     } else {

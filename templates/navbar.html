@@ -1,143 +1,175 @@
 {% load static %}
-<nav class="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur" role="navigation">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
-            <!-- logo + desktop -->
-            <div class="flex items-center gap-3">
-                <a href="/" class="flex items-center gap-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
-                        <span class="text-lg font-bold text-white">KC</span>
-                    </div>
-                    <span class="hidden font-bold text-foreground sm:inline">Kick Chronicle</span>
-                </a>
+{% url 'highlight:show_main_page' as url_highlight %}
+{% url 'kalender:schedule_index' as url_schedule %}
+{% url 'komen_like_rate:top_rated' as url_toprated %}
+{% url 'tim:standings_page' as url_team %}
 
-                <!-- desktop links -->
-                <div class="hidden md:flex items-center gap-2 ml-2">
-                    <a href="/" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Highlight</a>
-                    <a href="{% url 'kalender:schedule_index' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Schedule</a>
-                    <a href="{% url 'komen_like_rate:top_rated' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Top Rated</a>
-                    <a href="{% url 'tim:standings_page' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Team</a>
-                </div>
-            </div>
+<div class="sticky top-0 z-[60]" aria-hidden="true" style="height: max(8px, env(safe-area-inset-top));"></div>
+<nav class="sticky top-2 z-50 bg-[#0c0c0f]/80 backdrop-blur-md border-b border-white/10 rounded-b-2xl shadow-[0_6px_20px_-10px_rgba(0,0,0,0.6)]" role="navigation">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex h-18 items-center justify-between">
+      <!-- logo + desktop -->
+      <div class="flex items-center gap-4">
+        <a href="/" class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-orange-400 shadow-sm">
+            <span class="text-lg font-extrabold text-white">KC</span>
+          </div>
+          <span class="hidden sm:inline font-semibold text-gray-100 tracking-tight">Kick Chronicle</span>
+        </a>
 
-            <!-- user area + hamburger -->
-            <div class="flex items-center gap-2">
-                {% if user.is_authenticated %}
-                <div class="relative">
-                    <button id="user-menu-button" type="button"
-                    class="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-                    aria-expanded="false" aria-controls="user-menu">
-                        <span class="sr-only">Open user menu</span>
-                        {% if user.profile.image %}
-                            <img id="nav-avatar-img" class="h-8 w-8 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
-                        {% else %}
-                            <img id="nav-avatar-img" class="h-8 w-8 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
-                        {% endif %}
-                        <span id="nav-username" class="hidden sm:inline text-sm font-medium text-foreground">{{ user.username }}</span>
-                    </button>
-
-                    <!-- dropdown user -->
-                    <div id="user-menu" class="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-card border border-gray-700 ring-1 ring-black ring-opacity-5 hidden" role="menu" aria-labelledby="user-menu-button">
-                        <a href="{% url 'auth_profil:profile' %}" class="block px-4 py-2 text-sm text-foreground hover:bg-gray-700/50" role="menuitem">Settings</a>
-                        <a href="{% url 'komen_like_rate:favorite_list' %}" class="block px-4 py-2 text-sm text-foreground hover:bg-gray-700/50" role="menuitem">Favorite</a>
-                        <a href="{% url 'auth_profil:logout' %}" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700/50" role="menuitem">Sign Out</a>
-                    </div>
-                </div>
-                {% else %}
-                <div class="hidden md:flex items-center gap-2">
-                    <a href="{% url 'auth_profil:login' %}" class="px-3 py-2 text-sm font-medium text-muted-foreground rounded-md hover:bg-gray-700/50 hover:text-white">Sign In</a>
-                    <a href="{% url 'auth_profil:register' %}" class="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90">Create Account</a>
-                </div>
-                {% endif %}
-
-                <!-- hamburger mobile -->
-                <button id="mobile-menu-toggle" class="md:hidden inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-700/50 focus:outline-none" aria-controls="mobile-menu" aria-expanded="false">
-                    <span class="sr-only">Open main menu</span>
-                    <!-- icon -->
-                    <svg id="icon-open" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                    <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
+        <!-- desktop links -->
+        <div class="hidden md:flex items-center gap-1 ml-2">
+          {% with p=request.path %}
+          <a href="{{ url_highlight }}"
+             class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if p == url_highlight %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+            Highlight
+          </a>
+          <a href="{{ url_schedule }}"
+             class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if p == url_schedule %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+            Schedule
+          </a>
+          <a href="{{ url_toprated }}"
+             class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if p == url_toprated %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+            Top Rated
+          </a>
+          <a href="{{ url_team }}"
+             class="px-4 py-2 rounded-xl text-[15px] font-medium
+                    {% if p == url_team %} bg-white/10 text-white {% else %} text-gray-300 hover:text-white hover:bg-white/10 {% endif %}">
+            Team
+          </a>
+          {% endwith %}
         </div>
-    </div>
+      </div>
 
-    <!-- mobile -->
-    <div id="mobile-menu" class="md:hidden border-t border-border hidden">
-        <div class="px-4 pt-3 pb-4 space-y-1">
-            <a href="/" class="block px-3 py-2 rounded-md text-foreground hover:bg-gray-700/50">Highlight</a>
-            <a href="{% url 'kalender:schedule_index' %}" class="block px-3 py-2 rounded-md text-foreground hover:bg-gray-700/50">Schedule</a>
-            <a href="{% url 'komen_like_rate:top_rated' %}" class="block px-3 py-2 rounded-md text-foreground hover:bg-gray-700/50">Top Rated</a>
-            <a href="{% url 'tim:standings_page' %}" class="block px-3 py-2 rounded-md text-foreground hover:bg-gray-700/50">Team</a>
-
-            {% if user.is_authenticated %}
-                <div class="mt-2 border-t border-border/60 pt-2">
-                <a href="{% url 'auth_profil:profile' %}" class="block px-3 py-2 rounded-md text-foreground hover:bg-gray-700/50">Settings</a>
-                <a href="#" class="block px-3 py-2 rounded-md text-foreground hover:bg-gray-700/50">Favorite</a>
-                <a href="{% url 'auth_profil:logout' %}" class="block px-3 py-2 rounded-md text-red-400 hover:bg-gray-700/50">Sign Out</a>
-                </div>
+      <!-- user area + hamburger -->
+      <div class="flex items-center gap-2">
+        {% if user.is_authenticated %}
+        <div class="relative">
+          <button id="user-menu-button" type="button"
+                  class="flex items-center gap-3 px-3.5 py-2 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                  aria-expanded="false" aria-controls="user-menu">
+            {% if user.profile.image %}
+              <img class="h-9 w-9 rounded-full object-cover" src="{{ user.profile.image.url }}" alt="Avatar">
             {% else %}
-                <div class="mt-2 border-t border-border/60 pt-2 flex gap-2">
-                <a href="{% url 'auth_profil:login' %}" class="flex-1 px-3 py-2 rounded-md text-center text-foreground hover:bg-gray-700/50">Sign In</a>
-                <a href="{% url 'auth_profil:register' %}" class="flex-1 px-3 py-2 rounded-md text-center bg-primary text-primary-foreground hover:bg-primary/90">Create</a>
-                </div>
+              <img class="h-9 w-9 rounded-full object-cover" src="{% static 'img/default.png' %}" alt="Avatar">
             {% endif %}
+            <span class="hidden sm:inline text-[15px] font-medium text-gray-100">{{ user.username }}</span>
+          </button>
+
+          <!-- dropdown user -->
+          <div id="user-menu"
+               class="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#141417] text-gray-100 shadow-lg hidden"
+               role="menu" aria-labelledby="user-menu-button">
+            <a href="{% url 'auth_profil:profile' %}" class="block px-4 py-2.5 text-sm hover:bg-white/10" role="menuitem">Settings</a>
+            <a href="{% url 'komen_like_rate:favorite_list' %}" class="block px-4 py-2.5 text-sm hover:bg-white/10" role="menuitem">Favorite</a>
+            <a href="{% url 'auth_profil:logout' %}" class="block px-4 py-2.5 text-sm text-red-300 hover:bg-red-500/10" role="menuitem">Sign Out</a>
+          </div>
         </div>
+        {% else %}
+        <div class="hidden md:flex items-center gap-2">
+          <a href="{% url 'auth_profil:login' %}"
+             class="px-4 py-2 rounded-xl text-[15px] font-medium text-gray-300 hover:text-white hover:bg-white/10">
+            Sign In
+          </a>
+          <a href="{% url 'auth_profil:register' %}"
+             class="px-4 py-2 rounded-xl text-[15px] font-semibold bg-indigo-600 text-white hover:bg-indigo-500">
+            Create Account
+          </a>
+        </div>
+        {% endif %}
+
+        <!-- hamburger mobile -->
+        <button id="mobile-menu-toggle"
+                class="md:hidden inline-flex items-center justify-center p-2.5 rounded-xl hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                aria-controls="mobile-menu" aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <svg id="icon-open" class="h-6 w-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg id="icon-close" class="h-6 w-6 text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
     </div>
+  </div>
+
+  <!-- mobile -->
+  <div id="mobile-menu" class="md:hidden hidden border-t border-white/10 bg-[#0f0f12]/95 backdrop-blur">
+    <div class="px-4 pt-3 pb-4 space-y-1">
+      <a href="{{ url_highlight }}" class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Highlight</a>
+      <a href="{{ url_schedule }}"  class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Schedule</a>
+      <a href="{{ url_toprated }}"  class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Top Rated</a>
+      <a href="{{ url_team }}"      class="block px-3 py-3 rounded-xl text-gray-200 hover:bg-white/10">Team</a>
+
+      {% if user.is_authenticated %}
+      <div class="mt-2 border-t border-white/10 pt-2">
+        <a href="{% url 'auth_profil:profile' %}" class="block px-3 py-3 rounded-xl hover:bg-white/10">Settings</a>
+        <a href="{% url 'komen_like_rate:favorite_list' %}" class="block px-3 py-3 rounded-xl hover:bg-white/10">Favorite</a>
+        <a href="{% url 'auth_profil:logout' %}" class="block px-3 py-3 rounded-xl text-red-300 hover:bg-red-500/10">Sign Out</a>
+      </div>
+      {% else %}
+      <div class="mt-2 border-t border-white/10 pt-3 grid grid-cols-2 gap-2">
+        <a href="{% url 'auth_profil:login' %}" class="px-3 py-2.5 rounded-xl text-center hover:bg-white/10">Sign In</a>
+        <a href="{% url 'auth_profil:register' %}" class="px-3 py-2.5 rounded-xl text-center bg-indigo-600 text-white hover:bg-indigo-500">Create</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </nav>
 
 <script>
-    // mobile menu toggle
-    const mobileBtn = document.getElementById('mobile-menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const iconOpen = document.getElementById('icon-open');
-    const iconClose = document.getElementById('icon-close');
+  // mobile menu toggle
+  const mobileBtn = document.getElementById('mobile-menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const iconOpen = document.getElementById('icon-open');
+  const iconClose = document.getElementById('icon-close');
 
-    mobileBtn?.addEventListener('click', () => {
-        const open = mobileMenu.classList.toggle('hidden') === false;
-        mobileBtn.setAttribute('aria-expanded', String(open));
-        iconOpen.classList.toggle('hidden', open);
-        iconClose.classList.toggle('hidden', !open);
-    });
+  mobileBtn?.addEventListener('click', () => {
+    const open = mobileMenu.classList.toggle('hidden') === false;
+    mobileBtn.setAttribute('aria-expanded', String(open));
+    iconOpen.classList.toggle('hidden', open);
+    iconClose.classList.toggle('hidden', !open);
+  });
 
-    // Close mobile on resize to desktop
-    window.addEventListener('resize', () => {
-        if (window.innerWidth >= 768 && mobileMenu && !mobileMenu.classList.contains('hidden')) {
-            mobileMenu.classList.add('hidden');
-            mobileBtn?.setAttribute('aria-expanded', 'false');
-            iconOpen?.classList.remove('hidden');
-            iconClose?.classList.add('hidden');
-        }
-    });
+  // auto-close when resizing to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768 && mobileMenu && !mobileMenu.classList.contains('hidden')) {
+      mobileMenu.classList.add('hidden');
+      mobileBtn?.setAttribute('aria-expanded', 'false');
+      iconOpen?.classList.remove('hidden');
+      iconClose?.classList.add('hidden');
+    }
+  });
 
-    // User dropdown toggle
-    const userBtn = document.getElementById('user-menu-button');
-    const userMenu = document.getElementById('user-menu');
+  // user dropdown
+  const userBtn = document.getElementById('user-menu-button');
+  const userMenu = document.getElementById('user-menu');
 
-    userBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const open = userMenu.classList.toggle('hidden') === false;
-        userBtn.setAttribute('aria-expanded', String(open));
-    });
+  userBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = userMenu.classList.toggle('hidden') === false;
+    userBtn.setAttribute('aria-expanded', String(open));
+  });
 
-    document.addEventListener('click', (e) => {
-        if (!userMenu?.classList.contains('hidden') && !userMenu.contains(e.target) && e.target !== userBtn) {
-            userMenu.classList.add('hidden');
-            userBtn?.setAttribute('aria-expanded', 'false');
-        }
-    });
+  document.addEventListener('click', (e) => {
+    if (!userMenu?.classList.contains('hidden') && !userMenu.contains(e.target) && e.target !== userBtn) {
+      userMenu.classList.add('hidden');
+      userBtn?.setAttribute('aria-expanded', 'false');
+    }
+  });
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            userMenu?.classList.add('hidden');
-            userBtn?.setAttribute('aria-expanded', 'false');
-            mobileMenu?.classList.add('hidden');
-            mobileBtn?.setAttribute('aria-expanded', 'false');
-            iconOpen?.classList.remove('hidden');
-            iconClose?.classList.add('hidden');
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      userMenu?.classList.add('hidden');
+      userBtn?.setAttribute('aria-expanded', 'false');
+      mobileMenu?.classList.add('hidden');
+      mobileBtn?.setAttribute('aria-expanded', 'false');
+      iconOpen?.classList.remove('hidden');
+      iconClose?.classList.add('hidden');
     }
   });
 </script>
