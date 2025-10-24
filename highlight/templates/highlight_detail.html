@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load embed_video_tags %}
+{% load embed_video_tags custom_filters %}
 
 {% block content %}
 {% include 'rating_modal.html' with highlight_id=highlight.pk %}
@@ -18,7 +18,7 @@
 
       <!-- Video Player Section - Always Manual Iframe -->
       <div class="bg-black"> 
-        {% video highlight.url|replace:"http://","https://" as my_video as my_video %}
+        {% video highlight.url|force_https as my_video %}
           <div class="aspect-[16/9] relative">
             <iframe 
               class="absolute top-0 left-0 w-full h-full"
