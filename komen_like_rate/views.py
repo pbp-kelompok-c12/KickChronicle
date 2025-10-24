@@ -8,7 +8,9 @@ from django.db import transaction
 from .models import Rating, Comment, Favorite
 from .forms import RatingForm, CommentForm
 from django.views.decorators.http import require_POST
-from highlight.models import Highlight 
+from highlight.models import Highlight
+import logging
+logger = logging.getLogger(__name__) 
 
 @login_required
 def add_comment(request, highlight_id):
@@ -87,8 +89,12 @@ def submit_rating(request):
             if not created:
                 rating.value = rating_value
                 rating.save(update_fields=['value'])
+                logger.info(f"Rating updated for highlight {highlight_id} by user {request.user.id} to {rating_value}")
+            else:
+                logger.info(f"Rating created for highlight {highlight_id} by user {request.user.id} with value {rating_value}")
+
     except Exception as e:
-        print("DATABASE ERROR:", e)
+        logger.error(f"DATABASE ERROR while saving rating for highlight {highlight_id} by user {request.user.id}: {e}")
         return JsonResponse({'status': 'error', 'message': 'Failed to save rating'}, status=500)
 
     return JsonResponse({'status': 'success', 'rating': rating.value})
@@ -125,7 +131,7 @@ def delete_comment(request, comment_id):
 def favorite_list(request):
     favorites = Favorite.objects.filter(
         user=request.user,
-        highlight__isnull=False  # hanya favorit yang masih punya highlight
+        highlight__isnull=False
     ).select_related('highlight')
 
     return render(request, 'komen_like_rate/favorites.html', {
