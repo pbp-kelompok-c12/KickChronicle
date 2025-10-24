@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, EditProfileForm, CustomPasswordChangeForm, UserUpdateForm, ProfileUpdateForm
 from django.http import JsonResponse
 from django.templatetags.static import static
+from django.views.decorators.http import require_http_methods
+from django.utils.datastructures import MultiValueDictKeyError
 import json
 
 def register_user(request):
@@ -57,27 +59,37 @@ def profile_view(request):
     return render(request, 'profile.html', context)
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def edit_profile_view(request):
-    if request.method == 'POST':
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            u_form = UserUpdateForm(request.POST, instance=request.user)
-            p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-            
-            if u_form.is_valid() and p_form.is_valid():
-                u_form.save()
-                p_form.save()
-                return JsonResponse({
-                    'status': 'success', 
-                    'message': 'Profil berhasil diperbarui!',
-                    'new_image_url': request.user.profile.image.url if request.user.profile.image else ''
-                })
-            else:
-                errors = {**u_form.errors, **p_form.errors}
-                return JsonResponse({'status': 'error', 'errors': errors})
-    
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+
+            new_url = ''
+            try:
+                if request.user.profile.image:
+                    new_url = request.user.profile.image.url
+            except Exception:
+                new_url = ''
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Profil berhasil diperbarui!',
+                'new_image_url': new_url,
+            })
+
+        errors = {}
+        errors.update(u_form.errors.get_json_data())
+        errors.update(p_form.errors.get_json_data())
+        return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+
     u_form = UserUpdateForm(instance=request.user)
     p_form = ProfileUpdateForm(instance=request.user.profile)
-    
+
     if getattr(request.user.profile, "image", None):
         try:
             current_avatar_url = request.user.profile.image.url
@@ -87,8 +99,7 @@ def edit_profile_view(request):
         current_avatar_url = static('img/default.png')
 
     return render(
-        request,
-        'edit_profile.html',
+        request, 'edit_profile.html',
         {'u_form': u_form, 'p_form': p_form, 'current_avatar_url': current_avatar_url}
     )
 

@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   btn.addEventListener('click', async () => {
     {% if not request.user.is_authenticated %}
-      window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+      window.location.href = "{% url 'auth_profil:login' %}?next={{ request.get_full_path|urlencode }}";
       return;
     {% endif %}
 
