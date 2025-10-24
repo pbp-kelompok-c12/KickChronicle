@@ -18,7 +18,7 @@
 
       <!-- Video Player Section - Always Manual Iframe -->
       <div class="bg-black"> 
-        {% video highlight.url as my_video %}
+        {% video highlight.url|replace:"http://","https://" as my_video as my_video %}
           <div class="aspect-[16/9] relative">
             <iframe 
               class="absolute top-0 left-0 w-full h-full"
