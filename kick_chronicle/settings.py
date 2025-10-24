@@ -227,3 +227,7 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
 
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if PRODUCTION else 'http'
+
+EMBED_VIDEO_BACKENDS = (
+    'highlight.backends.SecureYoutubeBackend',
+)
