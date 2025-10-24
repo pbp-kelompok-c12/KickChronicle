@@ -186,13 +186,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (data.status === 'success') {
           closeModal();
-          showToast('✅ Rating berhasil dikirim!');
+          showToast('✅ Rating sent successfully!');
         } else {
-          showToast('❌ Gagal kirim rating!', 'error');
+          showToast('❌ Failed to send rating!', 'error');
         }
       } catch (err) {
         closeModal();
-        showToast('⚠️ Terjadi error!', 'error');
+        showToast('⚠️ An error occurred!', 'error');
       }
     }
   }
