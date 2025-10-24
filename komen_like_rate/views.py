@@ -69,13 +69,20 @@ def toggle_favorite(request, highlight_id):
 @require_POST
 def submit_rating(request):
     from uuid import UUID
+    user_id = request.user.id
+    logger.info(f"User {user_id} attempting to submit rating.")
+
     try:
         highlight_id = UUID(request.POST.get("highlight_id", ""))
         rating_value = int(request.POST.get("rating", 0))
         if not 1 <= rating_value <= 5:
+            logger.warning(f"User {user_id} submitted invalid rating value: {rating_value}")
             raise ValueError("Rating out of bounds")
-    except Exception:
+    except Exception as e:
+        logger.error(f"Invalid data from user {user_id}. Error: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+
+    logger.info(f"Data validated for user {user_id}, highlight {highlight_id}, rating {rating_value}.")
 
     highlight = get_object_or_404(Highlight, id=highlight_id)
 
@@ -89,13 +96,13 @@ def submit_rating(request):
             if not created:
                 rating.value = rating_value
                 rating.save(update_fields=['value'])
-                logger.info(f"Rating updated for highlight {highlight_id} by user {request.user.id} to {rating_value}")
+                logger.info(f"SUCCESS: Rating updated for highlight {highlight_id} by user {user_id} to {rating_value}")
             else:
-                logger.info(f"Rating created for highlight {highlight_id} by user {request.user.id} with value {rating_value}")
+                logger.info(f"SUCCESS: Rating created for highlight {highlight_id} by user {user_id} with value {rating_value}")
 
     except Exception as e:
-        logger.error(f"DATABASE ERROR while saving rating for highlight {highlight_id} by user {request.user.id}: {e}")
-        return JsonResponse({'status': 'error', 'message': 'Failed to save rating'}, status=500)
+        logger.error(f"DATABASE ERROR for user {user_id} on highlight {highlight_id}: {e}", exc_info=True)
+        return JsonResponse({'status': 'error', 'message': 'Failed to save rating due to a server error.'}, status=500)
 
     return JsonResponse({'status': 'success', 'rating': rating.value})
     
