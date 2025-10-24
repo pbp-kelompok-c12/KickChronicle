@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
+from django.db import transaction
 from .models import Rating, Comment, Favorite
 from .forms import RatingForm, CommentForm
 from django.views.decorators.http import require_POST
@@ -69,32 +70,27 @@ def submit_rating(request):
     try:
         highlight_id = UUID(request.POST.get("highlight_id", ""))
         rating_value = int(request.POST.get("rating", 0))
-        print(f"Data diterima: highlight_id={highlight_id}, rating={rating_value}, user={request.user.username}")
-        if rating_value < 1 or rating_value > 5:
-            raise ValueError()
-    except ValueError as e:
-        print(f"ERROR: Data yang diterima tidak valid. Detail: {e}")
+        if not 1 <= rating_value <= 5:
+            raise ValueError("Rating out of bounds")
+    except Exception:
         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
 
     highlight = get_object_or_404(Highlight, id=highlight_id)
-    
-    print("Mencoba menyimpan rating ke database...")
-    try:
-        rating, created = Rating.objects.get_or_create(
-            user=request.user,
-            highlight=highlight,
-            defaults={'value': rating_value}
-        )
-        if not created:
-            rating.value = rating_value
-            rating.save()
-            print(f"BERHASIL: Memperbarui rating yang ada untuk '{highlight.name}' menjadi {rating_value}.")
-        else:
-            print(f"BERHASIL: Membuat rating baru untuk '{highlight.name}' dengan nilai {rating_value}.")
 
+    try:
+        with transaction.atomic():
+            rating, created = Rating.objects.get_or_create(
+                user=request.user,
+                highlight=highlight,
+                defaults={'value': rating_value}
+            )
+            if not created:
+                rating.value = rating_value
+                rating.save(update_fields=['value'])
     except Exception as e:
-        print(f"DATABASE ERROR: Gagal menyimpan rating. Detail: {e}")
-        return JsonResponse({'status': 'success'})
+        print("DATABASE ERROR:", e)
+        return JsonResponse({'status': 'error', 'message': 'Failed to save rating'}, status=500)
+
     return JsonResponse({'status': 'success', 'rating': rating.value})
     
 def top_rated(request):
