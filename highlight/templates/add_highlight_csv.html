@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-3xl font-bold text-gray-100 mb-6">Import Highlights from CSV</h1>
+
+    {# The Upload Form #}
+    <form method="post" enctype="multipart/form-data" class="shadow-md rounded-lg px-8 pt-6 pb-8 mb-4 border border-gray-200">
+        {% csrf_token %}
+        <div class="mb-6">
+            <label class="block text-gray-100 text-sm font-semibold mb-2" for="{{ form.csv_file.id_for_label }}">
+                {{ form.csv_file.label }}
+            </label>
+            {{ form.csv_file }}
+            {% if form.csv_file.help_text %}
+                <p class="text-gray-300 text-xs italic mt-2">{{ form.csv_file.help_text }}</p>
+            {% endif %}
+            {% for error in form.csv_file.errors %}
+                <p class="text-red-500 text-xs italic mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <div class="flex items-center justify-start">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+                Upload & Import Data
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

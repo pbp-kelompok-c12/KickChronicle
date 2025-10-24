@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Schedule{% endblock title %}
+
+{% block extra_head %}
+<style>
+  /* ===== Dark theme tokens (mudah diganti) ===== */
+  :root {
+    --kc-bg:        #1e1e1e;
+    --kc-surface:   #282828;
+    --kc-border:    #333333;
+    --kc-text:      #f1f1f1;
+    --kc-text-dim:  #d7d7d7;
+    --kc-text-sub:  #e6e6e6;
+    --kc-muted:     #7a7a7a;
+    --kc-hover:     #2b2b2b;
+    --kc-ring:      #4b6cb7;
+    --kc-shadow:    rgba(0,0,0,.5);
+  }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  #calendar-header {
+    background: var(--kc-surface);
+  }
+  #date-display {
+    color: var(--kc-text);
+  }
+  #calendar-header button {
+    color: #f1f5f9;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  #calendar-header button:hover {
+    background: #3a3a3a;
+  }
+  .flatpickr-calendar {
+    background: var(--kc-bg) !important;
+    border: 1px solid var(--kc-border) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 30px var(--kc-shadow) !important;
+    color: #fff !important;
+  }
+  .flatpickr-calendar.open {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-top: 50px !important;
+  }
+  .flatpickr-months,
+  .flatpickr-weekdays {
+    background: var(--kc-bg) !important;
+  }
+  .flatpickr-current-month { color: #fff !important; }
+  .flatpickr-weekday {
+    color: var(--kc-text-dim) !important;
+    font-weight: 600 !important;
+  }
+  .flatpickr-current-month .flatpickr-monthDropdown-months,
+  .flatpickr-current-month input.cur-year {
+    background: var(--kc-bg) !important;
+    color: #fff !important;
+    padding: 2px 8px !important;
+  }
+  .flatpickr-current-month .flatpickr-monthDropdown-months:focus,
+  .flatpickr-current-month input.cur-year:focus {
+    outline: 2px solid var(--kc-ring) !important;
+    outline-offset: 1px !important;
+  }
+  .flatpickr-prev-month svg,
+  .flatpickr-next-month svg {
+    fill: #e8e8e8 !important;
+  }
+  .flatpickr-prev-month:hover svg,
+  .flatpickr-next-month:hover svg {
+    fill: #ffffff !important;
+  }
+  .flatpickr-day {
+    background: var(--kc-bg) !important;
+    color: var(--kc-text-sub) !important;
+    border-radius: 8px !important;
+  }
+  .flatpickr-day:hover {
+    background: var(--kc-hover) !important;
+    color: #fff !important;
+  }
+  .flatpickr-day.today {
+    background: #2f2f2f !important;
+    border-color: #6b7280 !important; /* gray-500 */
+    color: #fff !important;
+  }
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+    background: var(--kc-ring) !important;
+    border-color: var(--kc-ring) !important;
+    color: #fff !important;
+  }
+  .flatpickr-day.inRange {
+    background: #2a344a !important;
+    border-color: #324564 !important;
+    color: #eaf2ff !important;
+  }
+  /* hari bulan sebelah & disabled */
+  .flatpickr-day.prevMonthDay,
+  .flatpickr-day.nextMonthDay,
+  .flatpickr-day.flatpickr-disabled,
+  .flatpickr-day.notAllowed {
+    background: var(--kc-bg) !important;
+    color: var(--kc-muted) !important;
+    opacity: 1 !important; /* jangan terlalu pudar */
+  }
+  .flatpickr-current-month {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 14px !important;
+  }
+  .numInputWrapper span.arrowUp:after { border-bottom-color: #e6e6e6 !important; }
+  .numInputWrapper span.arrowDown:after { border-top-color: #e6e6e6 !important; }
+
+  .schedule-card:hover {
+    background: #303030;
+    transition: background-color .2s ease;
+  }
+</style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="w-full max-w-4xl mx-auto py-8 px-4">
+  <div id="calendar-header" class="flex items-center justify-center bg-[#282828] rounded-xl px-6 py-3 shadow-md mx-auto relative mb-8">
+    <button id="prev-day" class="w-9 h-9 flex items-center justify-center rounded-full text-white hover:bg-[#3a3a3a] transition">&lt;</button>
+    <div id="date-display" class="flex-1 text-center font-semibold text-lg text-gray-200 tracking-wide cursor-pointer"></div>
+    <button id="next-day" class="w-9 h-9 flex items-center justify-center rounded-full text-white hover:bg-[#3a3a3a] transition">&gt;</button>
+    <input type="text" id="datepicker" class="sr-only" aria-hidden="true" />
+  </div>
+
+ {% if user.is_superuser %}
+  <div class="flex justify-center gap-4 mb-8">
+      <a href="{% url 'kalender:add_schedule' %}"
+        class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
+        Add Schedule
+      </a>
+
+      <a href="{% url 'kalender:import_schedule_csv' %}"
+        class="bg-[#282828] hover:bg-[#3a3a3a] text-white font-bold py-2 px-4 rounded-lg shadow-md border border-white transition">
+        Import CSV
+      </a>
+  </div>
+  {% endif %}
+
+  <div id="match-list" class="flex flex-col gap-4">
+    {% for jadwal in matches %}
+      {% include "card_schedule.html" %}
+    {% empty %}
+      <p class='text-center text-gray-400 mt-8'>There are no matches scheduled for today</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+  <div class="bg-[#1e1e1e] rounded-lg shadow-xl p-8 max-w-sm w-full border border-gray-700">
+    <h3 class="text-xl font-bold text-white mb-4">Confirm Deletion</h3>
+    <p class="text-gray-400 mb-6">Are you sure you want to delete this schedule?</p>
+    <div class="flex justify-end gap-4">
+      <button id="cancel-delete-btn" class="px-6 py-2 rounded-md font-medium text-gray-300 hover:bg-gray-700 transition">
+        Cancel
+      </button>
+      <button id="confirm-delete-btn" class="px-6 py-2 rounded-md font-medium bg-red-600 text-white hover:bg-red-700 transition">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+  const IS_ADMIN = "{{ user.is_staff|yesno:'true,false' }}" === "true";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const dateDisplay = document.getElementById("date-display");
+    const prevBtn = document.getElementById("prev-day");
+    const nextBtn = document.getElementById("next-day");
+    const matchListDiv = document.getElementById("match-list");
+    const dateInput = document.getElementById("datepicker");
+    let currentDate = new Date("{{ selected_date|date:'Y-m-d' }}T12:00:00");
+    let scheduleIdToDelete = null;
+    const deleteModal = document.getElementById('delete-modal');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+    const fp = flatpickr(dateInput, {
+      dateFormat: "Y-m-d",
+      defaultDate: currentDate,
+      onChange: (selectedDates) => {
+        if (selectedDates.length > 0) {
+          currentDate = selectedDates[0];
+          updateDisplay();
+          loadMatches();
+        }
+      },
+    });
+
+    function formatDate(date) {
+      const options = { weekday: "long", month: "long", day: "numeric", year: "numeric" };
+      let formatted = date.toLocaleDateString("en-US", options);
+      formatted = formatted.replace(/, (\d{4})$/, " $1");
+      return formatted;
+    }
+
+    function updateDisplay() {
+      dateDisplay.textContent = formatDate(currentDate);
+      fp.setDate(currentDate, false);
+    }
+
+    function getLocalDateString(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function loadMatches() {
+      const dateStr = getLocalDateString(currentDate);
+      fetch(`/kalender/api/get_matches/?date=${dateStr}`)
+        .then(res => res.json())
+        .then(data => {
+          matchListDiv.innerHTML = "";
+          if (!data.matches || data.matches.length === 0) {
+            matchListDiv.innerHTML = "<p class='text-center text-gray-400 mt-8'>There are no matches scheduled for this date</p>";
+            return;
+          }
+
+          data.matches.forEach(match => {
+              const team1Logo = match.team_1_logo ? `<img src="${match.team_1_logo}" alt="${match.team_1}" class="h-10 w-10 rounded-full object-cover">` : '';
+              const team2Logo = match.team_2_logo ? `<img src="${match.team_2_logo}" alt="${match.team_2}" class="h-10 w-10 rounded-full object-cover">` : '';
+              const editUrl = `/kalender/edit/${match.id}/`;
+              const detailUrl = `/kalender/detail/${match.id}/`;
+
+              const cardContentHTML = `
+                <div class="flex items-center justify-between gap-x-4">
+                    <div class="flex flex-1 items-center justify-end gap-x-3 min-w-0">
+                        <span class="text-right text-white font-semibold truncate">${match.team_1}</span>
+                        ${team1Logo}
+                    </div>
+                    <div class="flex-none text-white font-bold text-xl text-center">
+                        ${match.start_time}
+                    </div>
+                    <div class="flex flex-1 items-center justify-start gap-x-3 min-w-0">
+                        ${team2Logo}
+                        <span class="text-left text-white font-semibold truncate">${match.team_2}</span>
+                    </div>
+                </div>
+              `;
+
+              let finalHTML;
+
+              if (IS_ADMIN) {
+                finalHTML = `
+                  <div class="flex items-center gap-x-4">
+                      <a href="${editUrl}" class="edit-btn flex-shrink-0 bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">Edit</a>
+                      <div class="flex-1 bg-[#282828] rounded-lg p-4 shadow-md schedule-card cursor-pointer" data-id="${match.id}">
+                          ${cardContentHTML}
+                      </div>
+                      <button data-id="${match.id}" class="delete-btn flex-shrink-0 bg-black hover:bg-gray-800 text-white text-sm px-5 py-2 rounded-md border border-white transition">Delete</button>
+                  </div>
+                `;
+              } else {
+                finalHTML = `
+                  <a href="${detailUrl}" class="block bg-[#282828] rounded-lg p-4 shadow-md schedule-card">
+                      ${cardContentHTML}
+                  </a>
+                `;
+              }
+              
+              matchListDiv.innerHTML += finalHTML;
+          });
+        })
+        .then(() => {
+          document.querySelectorAll('.schedule-card').forEach(card => {
+            card.addEventListener('click', e => {
+              if (e.target.closest('a, button')) return;
+              const id = card.dataset.id;
+              window.location.href = `/kalender/detail/${id}/`;
+            });
+          });
+        });
+    }
+
+    prevBtn.addEventListener("click", () => {
+      currentDate.setDate(currentDate.getDate() - 1);
+      updateDisplay();
+      loadMatches();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      currentDate.setDate(currentDate.getDate() + 1);
+      updateDisplay();
+      loadMatches();
+    });
+
+    dateDisplay.addEventListener("click", () => fp.open());
+
+    matchListDiv.addEventListener("click", e => {
+      const btn = e.target.closest(".delete-btn");
+      if (btn) {
+        scheduleIdToDelete = btn.dataset.id;
+        deleteModal.classList.remove("hidden");
+      }
+    });
+
+    cancelDeleteBtn.addEventListener("click", () => {
+      deleteModal.classList.add("hidden");
+      scheduleIdToDelete = null;
+    });
+
+    confirmDeleteBtn.addEventListener("click", async () => {
+      if (!scheduleIdToDelete) return;
+      const cardWrapper = document.querySelector(`.delete-btn[data-id="${scheduleIdToDelete}"]`).closest('.flex.items-center.gap-x-4');
+
+      const res = await fetch(`/kalender/delete/${scheduleIdToDelete}/`, {
+        method: "DELETE",
+        headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (cardWrapper) {
+            cardWrapper.remove();
+        }
+      }
+      deleteModal.classList.add("hidden");
+      scheduleIdToDelete = null;
+    });
+    updateDisplay();
+  });
+</script>
+{% endblock scripts %}

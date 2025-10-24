@@ -1,0 +1,77 @@
+{% load static %}
+
+<button
+  id="favBtn"
+  class="px-3 py-2 border border-gray-500 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-semibold transition-colors flex items-center gap-2
+         {% if is_favorited %} fav-on {% else %} fav-off {% endif %}"
+  data-id="{{ highlight.id }}"
+  aria-pressed="{{ is_favorited|yesno:'true,false' }}"
+  type="button"
+>
+  <span id="favIcon" class="text-base" style="color:{% if is_favorited %}#a16207{% else %}#1f2937{% endif %};">❤︎</span>
+  <span id="favLabel">{% if is_favorited %}Favorited{% else %}Favorite{% endif %}</span>
+</button>
+
+<style>
+.fav-off {
+    background:#18181b;
+    border-color:#3f3f46;
+    color:#e4e4e7; 
+}
+
+.fav-off:hover{ background:#27272a; }
+
+.fav-on {
+    background:#3a2d10;
+    border-color:#facc15;
+    color:#f8e08a;
+}
+.fav-on:hover{ background:#4a3712; }</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const btn   = document.getElementById('favBtn');
+  if (!btn) return;
+
+  const label = document.getElementById('favLabel');
+  const icon  = document.getElementById('favIcon');
+  const getCsrf = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+  icon.style.color = btn.classList.contains('fav-on') ? '#facc15' : '#e4e4e7';
+  
+  btn.addEventListener('click', async () => {
+    {% if not request.user.is_authenticated %}
+      window.location.href = "{% url 'auth_profil:login' %}?next={{ request.get_full_path|urlencode }}";
+      return;
+    {% endif %}
+
+    const id = btn.getAttribute('data-id');
+    try {
+      const res = await fetch(
+        "{% url 'komen_like_rate:toggle_favorite' '00000000-0000-0000-0000-000000000000' %}"
+          .replace('00000000-0000-0000-0000-000000000000', id),
+        { method: 'POST', headers: { 'X-CSRFToken': getCsrf() } }
+      );
+      const data = await res.json();
+      if (!res.ok || data.status !== 'ok') throw new Error('Toggle failed');
+
+      if (data.favorited) {
+        btn.classList.add('fav-on');
+        btn.classList.remove('fav-off');
+        btn.setAttribute('aria-pressed', 'true');
+        label.textContent = 'Favourited';
+        icon.style.color = '#a16207';
+      } else {
+        btn.classList.remove('fav-on');
+        btn.classList.add('fav-off');
+        btn.setAttribute('aria-pressed', 'false');
+        label.textContent = 'Favourite';
+        icon.style.color = '#1f2937';
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Gagal mengubah status favorit.');
+    }
+  });
+});
+</script>

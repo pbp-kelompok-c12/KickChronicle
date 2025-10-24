@@ -31,11 +31,19 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "derrick-kickchronicle.pbp.cs.ui.ac.id"]
-CSRF_TRUSTED_ORIGINS = [
-    "https://derrick-kickchronicle.pbp.cs.ui.ac.id"
-]
+
+if not PRODUCTION:
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://derrick-kickchronicle.pbp.cs.ui.ac.id",
+    ]
 
 # Application definition
+SITE_ID = 2 if PRODUCTION else 1
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,17 +52,40 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'anymail',
     'auth_profil',
+    "cloudinary",
+    "cloudinary_storage",
     'highlight',
     'kalender',
     'komen_like_rate',
     'tim',
+    'embed_video',
 ]
+
+ANYMAIL = {"SENDGRID_API_KEY": os.getenv("SENDGRID_API_KEY")}
+DEFAULT_FROM_EMAIL = "Kick Chronicle <chroniclekick@gmail.com>"
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
+            'key': ''
+        },
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -67,7 +98,7 @@ ROOT_URLCONF = 'kick_chronicle.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -101,6 +132,8 @@ if PRODUCTION:
             }
         }
     }
+    EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+
 else:
     # Development: gunakan SQLite
     DATABASES = {
@@ -109,7 +142,10 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
+    if os.getenv("SENDGRID_API_KEY"):
+        EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -135,7 +171,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Jakarta'
 
 USE_I18N = True
 
@@ -157,3 +193,37 @@ else:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Mencegah halaman konfirmasi email (untuk mempermudah)
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# Mengatur agar login menggunakan email, bukan username
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False # Pengguna tidak perlu membuat username
+
+# Pengaturan Spesifik untuk Social Account (PENTING)
+SOCIALACCOUNT_EMAIL_REQUIRED = True # Memaksa provider (Google) untuk memberikan email
+SOCIALACCOUNT_AUTO_SIGNUP = True    # Otomatis membuat akun tanpa halaman konfirmasi tambahan (jika email baru)
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+
+if CLOUDINARY_URL:
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    MEDIA_URL = "/media/"
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if PRODUCTION else 'http'

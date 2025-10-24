@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="w-full min-h-screen">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Back Navigation -->
+    <div class="mb-6">
+      <a href="{% url 'highlight:show_main_page' %}" class="text-gray-100 hover:text-gray-900 font-medium transition-colors">
+        ← Back to Main Menu
+      </a>
+    </div>
+    
+    <!-- Form -->
+    <div class=" rounded-lg border border-gray-100 p-6 sm:p-8 form-style">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-100 mb-2">Add Highlight</h1>
+      </div>
+      
+      <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        {% for field in form %}
+          <div>
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-100 mb-2">
+              {{ field.label }}
+            </label>
+            <div class="w-full">
+              {% if field.field.widget.input_type == 'select' %}
+                <select 
+                  name="{{ field.name }}" 
+                  id="{{ field.id_for_label }}" 
+                  style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
+                >
+                  {% for value, text in field.field.choices %}
+                    <option value="{{ value }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ text }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+              <input
+                type="{{ field.field.widget.input_type }}"
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                {% if field.name == 'created_at' %}
+                  value="{{ field.value|date:'Y-m-d H:m:s'|default_if_none:'' }}"
+                {% else %}
+                  value="{{ field.value|default_if_none:'' }}"
+                {% endif %}
+                style="background-color:#1a1a1a; color:#fff; border:1px solid #333; border-radius:6px; padding:8px 12px; width:100%;"
+              >
+              {% endif %}
+            </div>
+            {% if field.help_text %}
+              <p class="mt-1 text-sm text-gray-100">{{ field.help_text }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+              <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endfor %}
+        
+        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100">
+          <a href="{% url 'highlight:show_main_page' %}" class="order-2 sm:order-1 px-6 py-3 border border-gray-100 text-gray-100 rounded-md font-medium hover:bg-gray-400 transition-colors text-center">
+            Cancel
+          </a>
+          <button type="submit" class="order-1 sm:order-2 flex-1 bg-orange-600 text-white px-6 py-3 rounded-md font-medium hover:bg-orange-700 transition-colors">
+            Add Highlight
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

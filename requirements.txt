@@ -1,4 +1,4 @@
-django
+﻿django
 gunicorn
 whitenoise
 psycopg2-binary
@@ -6,3 +6,14 @@ requests
 urllib3
 python-dotenv
 selenium
+icalendar
+django-embed-video
+ics
+django-allauth
+PyJWT
+cryptography
+Pillow
+django-cloudinary-storage
+cloudinary
+pytz
+django-anymail[sendgrid]>=12.0
