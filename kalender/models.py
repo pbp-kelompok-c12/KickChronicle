@@ -12,4 +12,3 @@ class Kalender(models.Model):
 
     def __str__(self):
         return f"{self.team_1} vs {self.team_2} on {self.date}"
-
