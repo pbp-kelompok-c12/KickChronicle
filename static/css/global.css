@@ -1,0 +1,74 @@
+:root {
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.55 0.3 264);
+  --primary-foreground: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.65 0.25 40);
+  --destructive: oklch(0.55 0.25 27);
+  --border: oklch(0.2 0 0);
+  --ring: oklch(0.55 0.3 264);
+}
+
+body {
+    font-family: 'Geist', sans-serif; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.flatpickr-calendar {
+  background-color: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: inherit;
+}
+
+.flatpickr-months,
+.flatpickr-weekdays {
+  background-color: var(--card);
+  color: var(--foreground);
+}
+
+.flatpickr-current-month,
+.flatpickr-weekday {
+  color: var(--foreground);
+}
+
+.flatpickr-day {
+  color: var(--foreground);
+  background-color: var(--card);
+}
+
+.flatpickr-day:hover {
+  background-color: color-mix(in oklab, var(--card), white 10%);
+}
+
+.flatpickr-day.today {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background-color: color-mix(in oklab, var(--primary), var(--card) 60%);
+}
+
+.flatpickr-day.selected {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--muted-foreground);
+}
+
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  fill: var(--foreground);
+}
+
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg {
+  fill: var(--accent);
+}
