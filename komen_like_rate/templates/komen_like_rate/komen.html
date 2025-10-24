@@ -98,8 +98,24 @@
 </div>
 
 <script>
+const IS_AUTH = {{ request.user.is_authenticated|yesno:"true,false" }};
+const LOGIN_URL = "{% url 'auth_profil:login' %}?next={{ request.get_full_path|urlencode }}#comments";
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('commentForm');
+  if (!IS_AUTH) {
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = LOGIN_URL;
+    });
+
+    const textarea = document.getElementById('commentContent');
+    if (textarea) {
+      textarea.placeholder = 'Sign in to write a comment…';
+      textarea.readOnly = true;
+      textarea.classList.add('opacity-60','cursor-not-allowed');
+    }
+  }
   const textarea = document.getElementById('commentContent');
   const list = document.getElementById('commentList');
   const countEl = document.getElementById('commentCount');
@@ -165,6 +181,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Kirim komentar
   form.addEventListener('submit', async function (e) {
+    if (!IS_AUTH) {
+      window.location.href = LOGIN_URL;
+      return;
+    }
     e.preventDefault();
     const content = textarea.value.trim();
     if (!content) return;
