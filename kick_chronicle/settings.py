@@ -31,12 +31,19 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "derrick-kickchronicle.pbp.cs.ui.ac.id"]
-CSRF_TRUSTED_ORIGINS = [
-    "https://derrick-kickchronicle.pbp.cs.ui.ac.id"
-]
+
+if not PRODUCTION:
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://derrick-kickchronicle.pbp.cs.ui.ac.id",
+    ]
 
 # Application definition
-SITE_ID=1
+SITE_ID = 2 if PRODUCTION else 1
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -219,4 +226,4 @@ else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if PRODUCTION else 'http'
