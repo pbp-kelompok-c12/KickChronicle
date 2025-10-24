@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
-DEBUG = True
+DEBUG=True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "derrick-kickchronicle.pbp.cs.ui.ac.id"]
 
