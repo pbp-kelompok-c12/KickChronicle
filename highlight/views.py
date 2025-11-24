@@ -1,6 +1,6 @@
 import csv
 import io
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from highlight.models import Highlight
@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.db import transaction
 from komen_like_rate.models import Favorite
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 def show_main_page(request):
     query = request.GET.get('q')
@@ -192,3 +193,27 @@ def add_highlights_csv(request):
         return render(request, 'add_highlight_csv.html', {'form': form})
     else:
         return HttpResponseForbidden("403 FORBIDDEN")
+
+def highlight_json(request):
+    highlight_list = Highlight.objects.all()
+
+    paginator = Paginator(highlight_list,10)
+
+    page_number = request.GET.get('page')
+
+    page_obj = paginator.get_page(page_number)
+
+    data = [
+        {
+            'id': str(highlight.id),
+            'name': highlight.name,
+            'url': highlight.url,
+            'manual_thumbnail_url': highlight.manual_thumbnail_url if highlight.manual_thumbnail_url else None,
+            'description': highlight.description,
+            'created_at': highlight.created_at.isoformat(),
+            'season': highlight.season
+
+        }
+        for highlight in page_obj
+    ]
+    return JsonResponse(data, safe=False)
