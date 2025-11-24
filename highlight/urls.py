@@ -1,5 +1,5 @@
 from django.urls import path
-from highlight.views import show_highlight, show_main_page, add_highlight, edit_highlight, delete_highlight, add_highlights_csv
+from highlight.views import show_highlight, show_main_page, add_highlight, edit_highlight, delete_highlight, add_highlights_csv, highlight_json
 
 app_name = 'highlight'
 
@@ -10,4 +10,5 @@ urlpatterns = [
     path('add/csv',add_highlights_csv,name='add_highlight_csv'),
     path('<uuid:id>/edit',edit_highlight,name='edit_highlight'),
     path('<uuid:id>/delete',delete_highlight,name='delete_highlight'),
+    path('highlights-json/',highlight_json,name='highlight_json'),
 ]
