@@ -2,11 +2,11 @@ from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 from django.core import management
 
-def update_site_domain(sender, **kwargs):
-    """
-    Signal handler to update the site domain after migrations.
-    """
-    management.call_command('update_site')
+# def update_site_domain(sender, **kwargs):
+#     """
+#     Signal handler to update the site domain after migrations.
+#     """
+#     management.call_command('update_site')
 
 
 class AuthProfilConfig(AppConfig):
@@ -15,4 +15,4 @@ class AuthProfilConfig(AppConfig):
 
     def ready(self):
         from . import signals
-        post_migrate.connect(update_site_domain, sender=self)
+        # post_migrate.connect(update_site_domain, sender=self)
