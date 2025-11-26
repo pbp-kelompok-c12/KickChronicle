@@ -197,10 +197,12 @@ def add_highlights_csv(request):
 def highlight_json(request):
     highlight_list = Highlight.objects.all()
 
+    query = request.GET.get('q')
+    if query:
+        highlight_list = highlight_list.filter(name__icontains=query)
+
     paginator = Paginator(highlight_list,10)
-
     page_number = request.GET.get('page')
-
     page_obj = paginator.get_page(page_number)
 
     data = [
