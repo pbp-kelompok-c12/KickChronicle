@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
 from .forms import CustomSetPasswordForm
+from auth_profil.views import login_flutter, register_flutter, logout_flutter
 
 app_name = 'auth_profil'
 
@@ -34,4 +35,9 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
         template_name='password_reset_complete.html'
     ), name='password_reset_complete'),
+
+    path('auth/login/', login_flutter, name='login_flutter'),
+    path('auth/register/', register_flutter, name='register_flutter'),
+    path('auth/logout/', logout_flutter, name='logout_flutter'),
+    path('auth/google-login/', views.google_login_flutter, name='google_login_flutter'),
 ]

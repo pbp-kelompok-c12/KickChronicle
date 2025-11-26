@@ -4,12 +4,16 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+import requests
 from .forms import CustomUserCreationForm, EditProfileForm, CustomPasswordChangeForm, UserUpdateForm, ProfileUpdateForm
 from django.http import JsonResponse
 from django.templatetags.static import static
 from django.views.decorators.http import require_http_methods
 from django.utils.datastructures import MultiValueDictKeyError
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 import json
+from django.utils.crypto import get_random_string
 
 def register_user(request):
     if request.method == 'POST':
@@ -122,3 +126,124 @@ def password_change_view(request):
         update_session_auth_hash(request, user)
         return JsonResponse({"status": "success", "message": "Password updated successfully!"})
     return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+
+@csrf_exempt
+def login_flutter(request):
+    if request.method == 'POST':
+        # COBA BACA DARI JSON (request.body) DULU
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            # JIKA GAGAL (KARENA FLUTTER KIRIM FORM DATA), AMBIL DARI request.POST
+            data = request.POST
+        
+        # Ambil data dengan .get() agar aman
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                "status": True,
+                "message": "Login berhasil!",
+                "username": username,
+            }, status=200)
+        else:
+            return JsonResponse({
+                "status": False,
+                "message": "Username atau password salah.",
+            }, status=401)
+    return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
+
+@csrf_exempt
+def register_flutter(request):
+    if request.method == 'POST':
+        # LAKUKAN HAL SAMA UNTUK REGISTER
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = request.POST
+
+        username = data.get('username')
+        password = data.get('password')
+        password_confirm = data.get('passwordConfirm')
+
+        if not username or not password or not password_confirm:
+             return JsonResponse({"status": False, "message": "Semua field harus diisi"}, status=400)
+
+        if password != password_confirm:
+            return JsonResponse({"status": False, "message": "Password tidak cocok"}, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"status": False, "message": "Username sudah digunakan"}, status=409)
+
+        user = User.objects.create_user(username=username, password=password)
+        user.save()
+
+        return JsonResponse({"status": True, "message": "Akun berhasil dibuat!"}, status=201)
+    
+    return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
+
+@csrf_exempt
+def logout_flutter(request):
+    logout(request)
+    return JsonResponse({"status": True, "message": "Logout berhasil!"}, status=200)
+
+@csrf_exempt
+def google_login_flutter(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            access_token = data.get('access_token')
+
+            if not access_token:
+                return JsonResponse({"status": False, "message": "Access token is required"}, status=400)
+
+            # 1. Verifikasi Token ke Google API
+            google_response = requests.get(
+                'https://www.googleapis.com/oauth2/v3/userinfo',
+                params={'access_token': access_token}
+            )
+
+            if google_response.status_code != 200:
+                return JsonResponse({"status": False, "message": "Invalid Google Token"}, status=401)
+
+            google_data = google_response.json()
+            email = google_data.get('email')
+            # username_google = google_data.get('name') # Opsional
+
+            if not email:
+                return JsonResponse({"status": False, "message": "Email not provided by Google"}, status=400)
+
+            # 2. Cari User berdasarkan email, atau buat baru jika belum ada
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                # Buat user baru secara otomatis
+                username = email.split('@')[0]
+                # Pastikan username unik
+                if User.objects.filter(username=username).exists():
+                    username += get_random_string(5)
+                
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=get_random_string(32) # Password acak karena login via Google
+                )
+                user.save()
+
+            # 3. Login User tersebut
+            login(request, user)
+
+            return JsonResponse({
+                "status": True,
+                "message": "Login Google berhasil!",
+                "username": user.username,
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({"status": False, "message": str(e)}, status=500)
+    
+    return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
