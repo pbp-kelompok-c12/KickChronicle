@@ -36,8 +36,8 @@ urlpatterns = [
         template_name='password_reset_complete.html'
     ), name='password_reset_complete'),
 
-    path('auth/login/', login_flutter, name='login_flutter'),
-    path('auth/register/', register_flutter, name='register_flutter'),
-    path('auth/logout/', logout_flutter, name='logout_flutter'),
-    path('auth/google-login/', views.google_login_flutter, name='google_login_flutter'),
+    path('mobile/login/', login_flutter, name='login_flutter'),
+    path('mobile/register/', register_flutter, name='register_flutter'),
+    path('mobile/logout/', logout_flutter, name='logout_flutter'),
+    path('mobile/google-login/', views.google_login_flutter, name='google_login_flutter'),
 ]

@@ -14,6 +14,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 import json
 from django.utils.crypto import get_random_string
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 def register_user(request):
     if request.method == 'POST':
@@ -196,54 +198,96 @@ def google_login_flutter(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            access_token = data.get('access_token')
-
-            if not access_token:
-                return JsonResponse({"status": False, "message": "Access token is required"}, status=400)
-
-            # 1. Verifikasi Token ke Google API
-            google_response = requests.get(
-                'https://www.googleapis.com/oauth2/v3/userinfo',
-                params={'access_token': access_token}
-            )
-
-            if google_response.status_code != 200:
-                return JsonResponse({"status": False, "message": "Invalid Google Token"}, status=401)
-
-            google_data = google_response.json()
-            email = google_data.get('email')
-            # username_google = google_data.get('name') # Opsional
+            email = data.get('email')
 
             if not email:
-                return JsonResponse({"status": False, "message": "Email not provided by Google"}, status=400)
+                return JsonResponse({'status': False, 'message': 'Email diperlukan'}, status=400)
 
-            # 2. Cari User berdasarkan email, atau buat baru jika belum ada
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                # Buat user baru secara otomatis
+            # Cek apakah user sudah ada
+            user = User.objects.filter(email=email).first()
+
+            if user:
+                # Login user yang sudah ada
+                # PENTING: Kita harus menentukan 'backend' secara manual karena tidak lewat authenticate()
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return JsonResponse({
+                    'status': True, 
+                    'message': 'Login Google berhasil', 
+                    'username': user.username
+                })
+            else:
+                # Opsional: Buat akun baru otomatis jika email belum terdaftar
                 username = email.split('@')[0]
-                # Pastikan username unik
-                if User.objects.filter(username=username).exists():
-                    username += get_random_string(5)
                 
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    password=get_random_string(32) # Password acak karena login via Google
-                )
+                # Pastikan username unik (tambah angka jika sudah ada)
+                base_username = username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+
+                user = User.objects.create_user(username=username, email=email)
+                user.set_unusable_password() # User Google tidak butuh password
                 user.save()
 
-            # 3. Login User tersebut
-            login(request, user)
-
-            return JsonResponse({
-                "status": True,
-                "message": "Login Google berhasil!",
-                "username": user.username,
-            }, status=200)
+                # Login user baru tersebut
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return JsonResponse({
+                    'status': True, 
+                    'message': 'Akun berhasil dibuat & Login berhasil', 
+                    'username': user.username
+                })
 
         except Exception as e:
-            return JsonResponse({"status": False, "message": str(e)}, status=500)
+            # Menangkap error lain agar tidak sekadar '500 Internal Server Error'
+            print(f"Error Google Login: {e}") # Log ke terminal Django
+            return JsonResponse({'status': False, 'message': f'Server Error: {str(e)}'}, status=500)
+
+    return JsonResponse({'status': False, 'message': 'Method not allowed'}, status=405)
+
+@csrf_exempt
+def register_flutter(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = request.POST
+
+        username = data.get('username')
+        email = data.get('email')  # Ambil email
+        password = data.get('password')
+        password_confirm = data.get('passwordConfirm')
+
+        # 1. Validasi Input Kosong
+        if not username or not email or not password or not password_confirm:
+             return JsonResponse({"status": False, "message": "Semua field harus diisi"}, status=400)
+
+        # 2. Validasi Password Match
+        if password != password_confirm:
+            return JsonResponse({"status": False, "message": "Password tidak cocok"}, status=400)
+
+        # 3. Validasi Unik Username
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"status": False, "message": "Username sudah digunakan"}, status=409)
+
+        # 4. Validasi Unik Email (BARU)
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"status": False, "message": "Email sudah terdaftar. Silakan login."}, status=409)
+
+        # 5. Validasi Password Standard Django (BARU - Sesuai Foto)
+        # Kita buat user sementara (belum disimpan) untuk validasi password
+        # agar validator bisa mengecek kemiripan dengan username/email
+        temp_user = User(username=username, email=email)
+        try:
+            validate_password(password, user=temp_user)
+        except ValidationError as e:
+            # Mengambil pesan error pertama dari list error Django
+            return JsonResponse({"status": False, "message": e.messages[0]}, status=400)
+
+        # 6. Buat User jika semua lolos
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+
+        return JsonResponse({"status": True, "message": "Akun berhasil dibuat!"}, status=201)
     
     return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
