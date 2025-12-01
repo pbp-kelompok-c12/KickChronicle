@@ -32,12 +32,13 @@ def show_calendar_page(request):
 @login_required
 def get_matches_api(request):
     date_str = request.GET.get("date")
+    
     if not date_str:
-        return JsonResponse({"matches": []})
+        return JsonResponse({"matches": []}) 
+    
     try:
         query_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         jadwal_list = Kalender.objects.filter(date=query_date).order_by('time')
-        
         match_list = [
             {
                 "id": jadwal.id,
@@ -50,8 +51,12 @@ def get_matches_api(request):
             }
             for jadwal in jadwal_list
         ]
-
-        return JsonResponse({"matches": match_list})
+        return JsonResponse(
+            {"matches": match_list}, 
+            safe=False,
+            json_dumps_params={'indent': 4}
+        )
+     
     except (ValueError, TypeError):
         return JsonResponse({"matches": []})
 
