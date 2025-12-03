@@ -14,6 +14,7 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/delete/', views.delete_account_view, name='delete_account'),
     path('profile/password-change/', views.password_change_view, name='password_change'),
+    path('check-superuser/',views.check_superuser,name="check_superuser"),
 
     path('password_reset/', auth_views.PasswordResetView.as_view(
         template_name='password_reset_form.html',
