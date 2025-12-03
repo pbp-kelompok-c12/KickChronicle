@@ -40,5 +40,4 @@ urlpatterns = [
     path('mobile/register/', register_flutter, name='register_flutter'),
     path('mobile/logout/', logout_flutter, name='logout_flutter'),
     path('mobile/google-login/', views.google_login_flutter, name='google_login_flutter'),
-    
 ]
