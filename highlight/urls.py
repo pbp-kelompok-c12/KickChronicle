@@ -15,6 +15,6 @@ urlpatterns = [
     path('edit-highlight-flutter/<uuid:id>/', edit_highlight_flutter, name='edit_highlight_flutter'),
     path('add-highlight-flutter/', add_highlight_flutter, name='add_highlight_flutter'),
     path('delete-highlight-flutter/<uuid:id>/', delete_highlight_flutter, name='delete_highlight_flutter'),
-    path('add-highlights-csv-flutter', add_highlights_csv_flutter, name='add_highlights_csv_flutter'),
+    path('add-highlights-csv-flutter/', add_highlights_csv_flutter, name='add_highlights_csv_flutter'),
     path('admin-highlight-flutter/', admin_highlight_flutter, name='admin_highlight_flutter'),
 ]
