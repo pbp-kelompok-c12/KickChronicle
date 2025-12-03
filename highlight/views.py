@@ -1,5 +1,7 @@
 import csv
 import io
+import json
+from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseRedirect, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -64,6 +66,29 @@ def add_highlight(request):
     else:
         return HttpResponseForbidden("403 FORBIDDEN")
     
+@csrf_exempt
+def add_highlight_flutter(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            new_highlight = Highlight.objects.create(
+                name=data['name'],
+                url=data['url'],
+                manual_thumbnail_url=data.get('manual_thumbnail_url'),
+                description=data['description'],
+                season=data['season'],
+                # created_at is usually auto_now_add=True in models, so no need to set it manually
+            )
+            
+            new_highlight.save()
+
+            return JsonResponse({"status": "success", "message": "Highlight created!"}, status=201)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
+    
 def edit_highlight(request, id):
     if (request.user.is_authenticated and request.user.is_staff):
         highlight = get_object_or_404(Highlight, pk=id)
@@ -80,6 +105,27 @@ def edit_highlight(request, id):
     else:
         return HttpResponseForbidden("403 FORBIDDEN")
 
+@csrf_exempt
+def edit_highlight_flutter(request, id):
+    if request.method == 'POST':
+        try:
+            highlight = get_object_or_404(Highlight, pk=id)
+            data = json.loads(request.body)
+
+            highlight.name = data.get('name', highlight.name)
+            highlight.url = data.get('url', highlight.url)
+            highlight.manual_thumbnail_url = data.get('manual_thumbnail_url', highlight.manual_thumbnail_url)
+            highlight.description = data.get('description', highlight.description)
+            highlight.season = data.get('season', highlight.season)
+            
+            highlight.save()
+
+            return JsonResponse({"status": "success", "message": "Highlight updated!"}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
+
 def delete_highlight(request, id):
     if (request.user.is_authenticated and request.user.is_staff):
         highlight = get_object_or_404(Highlight, pk=id)
@@ -87,6 +133,18 @@ def delete_highlight(request, id):
         return HttpResponseRedirect(reverse('highlight:show_main_page'))
     else:
         return HttpResponseForbidden("403 FORBIDDEN")
+
+@csrf_exempt
+def delete_highlight_flutter(request, id):
+    if request.method == 'POST':
+        try:
+            highlight = get_object_or_404(Highlight, pk=id)
+            highlight.delete()
+            return JsonResponse({"status": "success", "message": "Highlight deleted!"}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
     
 
 def add_highlights_csv(request):
@@ -194,6 +252,99 @@ def add_highlights_csv(request):
     else:
         return HttpResponseForbidden("403 FORBIDDEN")
 
+@csrf_exempt
+def add_highlights_csv_flutter(request):
+    if request.method == 'POST':
+        try:
+            # 1. Check if file is present
+            if 'csv_file' not in request.FILES:
+                return JsonResponse({"status": "error", "message": "No file uploaded"}, status=400)
+
+            csv_file = request.FILES['csv_file']
+
+            # 2. Check extension
+            if not csv_file.name.endswith('.csv'):
+                return JsonResponse({"status": "error", "message": "File is not a CSV"}, status=400)
+
+            # 3. Read and Decode
+            file_data = csv_file.read().decode('utf-8')
+            io_string = io.StringIO(file_data)
+            reader = csv.reader(io_string)
+            
+            # Skip header (assuming 1st row is header based on your screenshot logic)
+            next(reader, None) 
+
+            highlights_to_create = []
+            skipped_rows = []
+
+            # 4. Parse Rows
+            # row[0] -> Name
+            # row[1] -> URL
+            # row[2] -> Description (optional)
+            # row[3] -> Manual Thumbnail URL (optional)
+            # row[4] -> Season (e.g., '2024/2025')
+
+            season_mapping = {
+                '2022/2023': '22/23',
+                '2023/2024': '23/24',
+                '2024/2025': '24/25',
+            }
+
+            for row_idx, row in enumerate(reader, start=2):
+                if len(row) < 2: # Need at least Name and URL
+                    skipped_rows.append(f"Row {row_idx}: Too few columns")
+                    continue
+
+                name = row[0].strip()
+                url = row[1].strip()
+                
+                if not name or not url:
+                    skipped_rows.append(f"Row {row_idx}: Missing name or URL")
+                    continue
+
+                description = row[2].strip() if len(row) > 2 else ""
+                manual_thumbnail_url = row[3].strip() if len(row) > 3 else None
+                if manual_thumbnail_url == "":
+                    manual_thumbnail_url = None
+                
+                season_raw = row[4].strip() if len(row) > 4 else ""
+                season_val = season_mapping.get(season_raw) 
+                
+                # If season not found, fallback or skip? 
+                # For simplicity, let's default to None or handle it.
+                # Your screenshot shows strict checking, but let's be lenient for the flutter test.
+                if not season_val:
+                     skipped_rows.append(f"Row {row_idx}: Invalid season format '{season_raw}'")
+                     continue
+
+                highlights_to_create.append(Highlight(
+                    name=name,
+                    url=url,
+                    description=description,
+                    manual_thumbnail_url=manual_thumbnail_url,
+                    season=season_val
+                ))
+
+            # 5. Bulk Create
+            if highlights_to_create:
+                Highlight.objects.bulk_create(highlights_to_create)
+                return JsonResponse({
+                    "status": "success", 
+                    "message": f"Successfully imported {len(highlights_to_create)} highlights.",
+                    "skipped": skipped_rows
+                }, status=201)
+            else:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "No valid rows found to import.",
+                    "skipped": skipped_rows
+                }, status=400)
+
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
+
 def highlight_json(request):
     highlight_list = Highlight.objects.all()
 
@@ -205,17 +356,79 @@ def highlight_json(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    data = [
-        {
-            'id': str(highlight.id),
-            'name': highlight.name,
-            'url': highlight.url,
-            'manual_thumbnail_url': highlight.manual_thumbnail_url if highlight.manual_thumbnail_url else None,
-            'description': highlight.description,
-            'created_at': highlight.created_at.isoformat(),
-            'season': highlight.season
+    data = []
 
-        }
-        for highlight in page_obj
-    ]
+    for highlight in page_obj:
+        home_standing = None
+        if highlight.home: # checks if self.home returns a Standing object
+            home_standing = {
+                "team": highlight.home.team,    # Adjust field names to match your Standing model
+                "played": highlight.home.played,
+                "won": highlight.home.won,
+                "drawn": highlight.home.drawn,
+                "lost": highlight.home.lost,
+            }
+
+        # 2. Access the @property 'away'
+        away_standing = None
+        if highlight.away:
+            away_standing = {
+                "team": highlight.away.team,
+                "played": highlight.away.played,
+                "won": highlight.away.won,
+                "drawn": highlight.away.drawn,
+                "lost": highlight.away.lost,
+            }
+        
+        data.append({
+            "id": highlight.pk,
+            "name": highlight.name,
+            "url": highlight.url,
+            "description": highlight.description,
+            "season": highlight.season,
+            "manual_thumbnail_url": highlight.manual_thumbnail_url,
+            "created_at": highlight.created_at.isoformat(),
+            "home_standing": home_standing, 
+            "away_standing": away_standing,
+        })
+
+
     return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def admin_highlight_flutter(request):
+    if request.method == 'GET':
+        # Return all highlights for the admin list
+        highlights = Highlight.objects.all().order_by('-created_at')
+        data = []
+        for item in highlights:
+            data.append({
+                "id": item.pk,
+                "name": item.name,
+                "url": item.url,
+                "created_at": item.created_at.strftime("%Y-%m-%d %H:%M"), # Simple string format
+            })
+        return JsonResponse(data, safe=False)
+
+    elif request.method == 'POST':
+        # Bulk Delete
+        try:
+            data = json.loads(request.body)
+            ids_to_delete = data.get('ids', [])
+            
+            if not ids_to_delete:
+                return JsonResponse({"status": "error", "message": "No IDs provided"}, status=400)
+
+            # Filter and delete
+            # Assuming IDs are UUIDs or ints, Django handles the list lookup
+            deleted_count, _ = Highlight.objects.filter(pk__in=ids_to_delete).delete()
+            
+            return JsonResponse({
+                "status": "success", 
+                "message": f"Successfully deleted {deleted_count} highlights."
+            }, status=200)
+            
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
