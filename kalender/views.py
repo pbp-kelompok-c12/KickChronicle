@@ -29,7 +29,6 @@ def show_calendar_page(request):
         "selected_date": selected_date
     })
 
-@login_required
 def get_matches_api(request):
     date_str = request.GET.get("date")
     
@@ -122,7 +121,7 @@ def schedule_detail_view(request, pk):
     jadwal = get_object_or_404(Kalender, pk=pk)
     return render(request, "schedule_detail.html", {"jadwal": jadwal})
 
-@staff_member_required
+
 def import_schedule_csv(request):
     if request.method != 'POST':
         form = CsvUploadForm()
