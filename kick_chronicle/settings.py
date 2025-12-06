@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'komen_like_rate',
     'tim',
     'embed_video',
+    'corsheaders',
 ]
 
 ANYMAIL = {"SENDGRID_API_KEY": os.getenv("SENDGRID_API_KEY")}
@@ -91,6 +92,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'kick_chronicle.urls'
@@ -242,4 +244,3 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
-CORS_ALLOW_HEADERS = ["*"]
