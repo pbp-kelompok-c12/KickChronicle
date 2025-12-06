@@ -17,3 +17,4 @@ django-cloudinary-storage
 cloudinary
 pytz
 django-anymail[sendgrid]>=12.0
+django-cors-headers
