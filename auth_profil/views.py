@@ -291,3 +291,17 @@ def register_flutter(request):
         return JsonResponse({"status": True, "message": "Akun berhasil dibuat!"}, status=201)
     
     return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
+
+def check_superuser(request):
+    if request.user.is_authenticated:
+        return JsonResponse({
+            "status": True,
+            "username": request.user.username,
+            "is_superuser": request.user.is_superuser
+        }, status=200)
+    
+    return JsonResponse({
+        "status": False,
+        "is_superuser": False,
+        "message": "User not authenticated"
+    }, status=200)
