@@ -8,9 +8,15 @@ from .forms import ScheduleForm, CsvUploadForm
 from datetime import datetime
 from icalendar import Calendar, Event
 from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
 import pytz
 import csv
 import io
+import requests
+
+@staff_member_required
+def check_admin_status(request):
+    return JsonResponse({"is_staff": True})
 
 @login_required
 def show_calendar_page(request):
@@ -29,6 +35,7 @@ def show_calendar_page(request):
         "selected_date": selected_date
     })
 
+@login_required
 def get_matches_api(request):
     date_str = request.GET.get("date")
     
@@ -84,6 +91,7 @@ def export_kalender_ics(request, kalender_id):
     return response
 
 @staff_member_required
+@csrf_exempt
 def add_schedule_view(request):
     if request.method == 'POST':
         form = ScheduleForm(request.POST)
@@ -96,6 +104,7 @@ def add_schedule_view(request):
     return render(request, 'add_schedule.html', {'form': form})
 
 @staff_member_required
+@csrf_exempt
 def edit_schedule_view(request, pk):
     jadwal = get_object_or_404(Kalender, pk=pk)
     if request.method == 'POST':
@@ -109,12 +118,19 @@ def edit_schedule_view(request, pk):
     return render(request, 'edit_schedule.html', {'form': form, 'jadwal': jadwal})
 
 @staff_member_required
+@csrf_exempt
 def delete_schedule_view(request, pk):
-    jadwal = get_object_or_404(Kalender, pk=pk)
-    if request.method == 'DELETE':
-        jadwal.delete()
-        return JsonResponse({"success": True, "message": "Schedule berhasil dihapus!"})
-    return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
+    is_delete_request = request.method == 'DELETE' or \
+                        (request.method == 'POST' and request.POST.get('_method') == 'DELETE')
+
+    if is_delete_request:
+        try:
+            jadwal = get_object_or_404(Kalender, pk=pk)
+            jadwal.delete()
+            return JsonResponse({"success": True, "message": "Schedule berhasil dihapus!"})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": f"Gagal menghapus jadwal: {e}"}, status=500)
+    return JsonResponse({"success": False, "message": "Invalid request method or missing DELETE override"}, status=400)
 
 @login_required
 def schedule_detail_view(request, pk):
@@ -122,6 +138,7 @@ def schedule_detail_view(request, pk):
     return render(request, "schedule_detail.html", {"jadwal": jadwal})
 
 
+@staff_member_required
 def import_schedule_csv(request):
     if request.method != 'POST':
         form = CsvUploadForm()
@@ -180,6 +197,7 @@ def import_schedule_csv(request):
         return redirect('kalender:import_schedule_csv')
 
 @staff_member_required
+@csrf_exempt
 def export_schedule_csv(request):
     matches = Kalender.objects.all().order_by('date', 'time')
     response = HttpResponse(content_type='text/csv')
@@ -198,3 +216,57 @@ def export_schedule_csv(request):
             match.team_2_logo  
         ])
     return response
+
+@staff_member_required
+@csrf_exempt
+def import_schedule_csv_flutter(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Hanya POST yang diizinkan.'}, status=405)
+    
+    try:
+        csv_content = request.POST.get('csv_content')
+        
+        if not csv_content:
+             return JsonResponse({'status': 'error', 'message': 'Data CSV hilang dari request.'}, status=400)
+             
+        items_created = 0
+        items_updated = 0
+        io_string = io.StringIO(csv_content)
+        reader = csv.reader(io_string)
+        next(reader) 
+
+        for row in reader:
+            if len(row) < 7: continue
+
+            team_1 = row[0].strip()
+            team_2 = row[1].strip()
+            date_str = row[2].strip()
+            time_str = row[3].strip()
+            description = row[4].strip()
+            logo_1 = row[5].strip()
+            logo_2 = row[6].strip()
+
+            final_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            final_time = datetime.strptime(time_str, "%H:%M").time()
+            
+            obj, created = Kalender.objects.update_or_create(
+                team_1=team_1,
+                team_2=team_2,
+                date=final_date,
+                defaults={
+                    "time": final_time,
+                    "description": description,
+                    "team_1_logo": logo_1, 
+                    "team_2_logo": logo_2, 
+                }
+            )
+            if created: items_created += 1
+            else: items_updated += 1
+
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'{items_created} jadwal baru berhasil diimpor, {items_updated} diperbarui.'
+        })
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Terjadi error pemrosesan: {e}'}, status=500)
