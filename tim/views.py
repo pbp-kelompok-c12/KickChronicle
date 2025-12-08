@@ -49,7 +49,6 @@ def standings_page(request):
     }
     return render(request, 'standings.html', context)
 
-@login_required
 def get_standings_json(request):
     """API endpoint to get standings data filtered by season"""
     season = request.GET.get('season', None)
@@ -61,8 +60,9 @@ def get_standings_json(request):
     
     data = []
     for standing in standings:
-        logo_url = get_team_logo_url(standing.team)
-        
+        # Kirim URL absolut agar Flutter tidak perlu merakit host lagi.
+        logo_url = request.build_absolute_uri(get_team_logo_url(standing.team))
+
         data.append({
             'id': standing.id,
             'season': standing.season,
@@ -151,7 +151,6 @@ def upload_standings_ajax(request):
             'errors': form.errors
         }, status=400)
 
-@login_required
 def get_available_seasons(request):
     """Get list of seasons that have data uploaded"""
     seasons = Standing.objects.values_list('season', flat=True).distinct().order_by('season')
