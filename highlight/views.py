@@ -2,6 +2,7 @@ import csv
 import io
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseRedirect, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -67,6 +68,7 @@ def add_highlight(request):
         return HttpResponseForbidden("403 FORBIDDEN")
     
 @csrf_exempt
+@user_passes_test(lambda u: u.is_superuser)
 def add_highlight_flutter(request):
     if request.method == 'POST':
         try:
@@ -106,6 +108,7 @@ def edit_highlight(request, id):
         return HttpResponseForbidden("403 FORBIDDEN")
 
 @csrf_exempt
+@user_passes_test(lambda u: u.is_superuser)
 def edit_highlight_flutter(request, id):
     if request.method == 'POST':
         try:
@@ -135,6 +138,7 @@ def delete_highlight(request, id):
         return HttpResponseForbidden("403 FORBIDDEN")
 
 @csrf_exempt
+@user_passes_test(lambda u: u.is_superuser)
 def delete_highlight_flutter(request, id):
     if request.method == 'POST':
         try:
@@ -253,6 +257,7 @@ def add_highlights_csv(request):
         return HttpResponseForbidden("403 FORBIDDEN")
 
 @csrf_exempt
+@user_passes_test(lambda u: u.is_superuser)
 def add_highlights_csv_flutter(request):
     if request.method == 'POST':
         try:
@@ -396,6 +401,7 @@ def highlight_json(request):
     return JsonResponse(data, safe=False)
 
 @csrf_exempt
+@user_passes_test(lambda u: u.is_superuser)
 def admin_highlight_flutter(request):
     if request.method == 'GET':
         # Return all highlights for the admin list
