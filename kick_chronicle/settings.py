@@ -36,6 +36,8 @@ if not PRODUCTION:
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:8000",
         "http://127.0.0.1:8000",
+        "http://localhost:3000",   
+        "http://127.0.0.1:3000",
     ]
 else:
     CSRF_TRUSTED_ORIGINS = [
@@ -58,7 +60,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'anymail',
-    'corsheaders',
     'auth_profil',
     "cloudinary",
     "cloudinary_storage",
@@ -94,15 +95,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
-
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE = 'None'
 
 ROOT_URLCONF = 'kick_chronicle.urls'
 
