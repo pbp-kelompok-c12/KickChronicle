@@ -13,4 +13,6 @@ urlpatterns = [
     path('detail/<int:pk>/', views.schedule_detail_view, name='schedule_detail'), 
     path('import/csv/', views.import_schedule_csv, name='import_schedule_csv'),
     path('export/csv/', views.export_schedule_csv, name='export_schedule_csv'),
+    path('api/check_admin/', views.check_admin_status, name='check_admin_status'),
+    path('api/import_flutter/', views.import_schedule_csv_flutter, name='import_schedule_csv_flutter'),
 ]
