@@ -1,37 +1,52 @@
 # komen_like_rate/views.py
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
+from django.db.models.functions import Coalesce
+from django.db import transaction
 from .models import Rating, Comment, Favorite
 from .forms import RatingForm, CommentForm
 from django.views.decorators.http import require_POST
-from highlight.models import Highlight 
-from django.http import JsonResponse, HttpResponseForbidden
-
-
- 
+from highlight.models import Highlight
+import logging
+logger = logging.getLogger(__name__) 
 
 @login_required
 def add_comment(request, highlight_id):
     highlight = get_object_or_404(Highlight, id=highlight_id)
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.highlight = highlight
-            comment.save()
-            data = {
-                'user': comment.user.username,
-                'content': comment.content,
-                'created_at': comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            }
-            return JsonResponse(data)
-        else:
-            return JsonResponse({'error': 'Invalid form'}, status=400)
-    return HttpResponseBadRequest("Invalid request")
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Invalid request")
+
+    form = CommentForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({'error': 'Invalid form'}, status=400)
+
+    comment = form.save(commit=False)
+    comment.user = request.user
+    comment.highlight = highlight
+    comment.save()
+
+    avatar_url = ""
+    try:
+        prof = getattr(request.user, "profile", None)
+        if prof and prof.image:
+            avatar_url = prof.image.url
+    except Exception:
+        avatar_url = ""
+
+    data = {
+        'status': 'ok',
+        'id': comment.id,
+        'user': comment.user.username,
+        'content': comment.content,
+        'created_at': comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        'avatar_url': avatar_url,
+        'initial': comment.user.username[:1].upper(),
+    }
+    return JsonResponse(data)
 
 @login_required
 def toggle_favorite(request, highlight_id):
@@ -55,46 +70,65 @@ def toggle_favorite(request, highlight_id):
 @require_POST
 def submit_rating(request):
     from uuid import UUID
+    user_id = request.user.id
+    logger.info(f"User {user_id} attempting to submit rating.")
+
     try:
         highlight_id = UUID(request.POST.get("highlight_id", ""))
         rating_value = int(request.POST.get("rating", 0))
-        if rating_value < 1 or rating_value > 5:
-            raise ValueError()
-    except ValueError:
+        if not 1 <= rating_value <= 5:
+            logger.warning(f"User {user_id} submitted invalid rating value: {rating_value}")
+            raise ValueError("Rating out of bounds")
+    except Exception as e:
+        logger.error(f"Invalid data from user {user_id}. Error: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+
+    logger.info(f"Data validated for user {user_id}, highlight {highlight_id}, rating {rating_value}.")
 
     highlight = get_object_or_404(Highlight, id=highlight_id)
 
-    rating, created = Rating.objects.get_or_create(
-        user=request.user,
-        highlight=highlight,
-        defaults={'value': rating_value}
-    )
-    if not created:
-        rating.value = rating_value
-        rating.save()
+    try:
+        with transaction.atomic():
+            rating, created = Rating.objects.get_or_create(
+                user=request.user,
+                highlight=highlight,
+                defaults={'value': rating_value}
+            )
+            if not created:
+                rating.value = rating_value
+                rating.save(update_fields=['value'])
+                logger.info(f"SUCCESS: Rating updated for highlight {highlight_id} by user {user_id} to {rating_value}")
+            else:
+                logger.info(f"SUCCESS: Rating created for highlight {highlight_id} by user {user_id} with value {rating_value}")
+
+    except Exception as e:
+        logger.error(f"DATABASE ERROR for user {user_id} on highlight {highlight_id}: {e}", exc_info=True)
+        return JsonResponse({'status': 'error', 'message': 'Failed to save rating due to a server error.'}, status=500)
 
     return JsonResponse({'status': 'success', 'rating': rating.value})
     
 def top_rated(request):
-    from django.db.models import Avg
-    from highlight.models import Highlight
-
     highlights = Highlight.objects.all()
     start = request.GET.get('start_date')
     end = request.GET.get('end_date')
+
     if start:
         highlights = highlights.filter(created_at__date__gte=start)
     if end:
         highlights = highlights.filter(created_at__date__lte=end)
-    highlights = highlights.annotate(avg_rating=Avg('rating__value')).order_by('-avg_rating')[:10]
-    
+
+    highlights = highlights.annotate(
+        avg_rating=Coalesce(Avg('rating__value'), 0.0)
+    ).order_by('-avg_rating')[:10]
+
     return render(request, 'komen_like_rate/top_rated.html', {
         'highlights': highlights,
         'start_date': start,
         'end_date': end,
     })
 
+@login_required
+@require_POST
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
     if comment.user_id != request.user.id:
@@ -106,9 +140,82 @@ def delete_comment(request, comment_id):
 def favorite_list(request):
     favorites = Favorite.objects.filter(
         user=request.user,
-        highlight__isnull=False  # hanya favorit yang masih punya highlight
+        highlight__isnull=False
     ).select_related('highlight')
 
     return render(request, 'komen_like_rate/favorites.html', {
         'favorites': favorites
     })
+
+@login_required
+def favorite_list_json(request):
+    favorites = Favorite.objects.filter(
+        user=request.user,
+        highlight__isnull=False
+    ).select_related('highlight')
+
+    data = []
+    for fav in favorites:
+        h = fav.highlight
+        data.append({
+            "id": str(h.id),
+            "title": getattr(h, "title", ""),
+            "created_at": h.created_at.strftime("%Y-%m-%d %H:%M:%S") if hasattr(h, "created_at") else None,
+            "thumbnail_url": h.thumbnail.url if getattr(h, "thumbnail", None) else "",
+        })
+
+    return JsonResponse({"favorites": data})
+
+def top_rated_json(request):
+    highlights = Highlight.objects.all()
+    start = request.GET.get('start_date')
+    end = request.GET.get('end_date')
+
+    if start:
+        highlights = highlights.filter(created_at__date__gte=start)
+    if end:
+        highlights = highlights.filter(created_at__date__lte=end)
+
+    highlights = highlights.annotate(
+        avg_rating=Coalesce(Avg('rating__value'), 0.0)
+    ).order_by('-avg_rating')[:10]
+
+    data = []
+    for h in highlights:
+        data.append({
+            "id": str(h.id),
+            "title": getattr(h, "title", ""),
+            "avg_rating": float(h.avg_rating or 0),
+            "created_at": h.created_at.strftime("%Y-%m-%d %H:%M:%S") if hasattr(h, "created_at") else None,
+            "thumbnail_url": h.thumbnail.url if getattr(h, "thumbnail", None) else "",
+        })
+
+    return JsonResponse({"highlights": data})
+
+@login_required
+def comment_list_json(request, highlight_id):
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+    comments = Comment.objects.filter(
+        highlight=highlight
+    ).select_related("user").order_by("-created_at")
+
+    data = []
+    for c in comments:
+        avatar_url = ""
+        try:
+            prof = getattr(c.user, "profile", None)
+            if prof and prof.image:
+                avatar_url = prof.image.url
+        except Exception:
+            avatar_url = ""
+
+        data.append({
+            "id": c.id,
+            "user": c.user.username,
+            "content": c.content,
+            "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "avatar_url": avatar_url,
+            "initial": c.user.username[:1].upper(),
+        })
+
+    return JsonResponse({"comments": data})
