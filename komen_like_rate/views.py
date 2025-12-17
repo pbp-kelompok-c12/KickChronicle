@@ -11,7 +11,11 @@ from .forms import RatingForm, CommentForm
 from django.views.decorators.http import require_POST
 from highlight.models import Highlight
 import logging
+from django.views.decorators.csrf import csrf_exempt
 logger = logging.getLogger(__name__) 
+import json
+from datetime import date
+from django.utils.dateparse import parse_date
 
 @login_required
 def add_comment(request, highlight_id):
@@ -86,7 +90,6 @@ def submit_rating(request):
     logger.info(f"Data validated for user {user_id}, highlight {highlight_id}, rating {rating_value}.")
 
     highlight = get_object_or_404(Highlight, id=highlight_id)
-
     try:
         with transaction.atomic():
             rating, created = Rating.objects.get_or_create(
@@ -145,4 +148,257 @@ def favorite_list(request):
 
     return render(request, 'komen_like_rate/favorites.html', {
         'favorites': favorites
+    })
+
+@login_required
+@csrf_exempt
+def get_comments_mobile(request, highlight_id):
+    if request.method != "GET":
+        return JsonResponse({"status": False, "message": "Invalid method"}, status=405)
+
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+    
+    comments = Comment.objects.filter(
+        highlight=highlight
+    ).select_related("user").order_by('-created_at')
+
+    data = [
+        {
+            "id": c.id,
+            "user": c.user.username,
+            "content": c.content,
+            "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        for c in comments
+    ]
+
+    return JsonResponse({"status": True, "comments": data})
+
+@login_required
+@csrf_exempt
+def add_comment_mobile(request, highlight_id):
+    if request.method != 'POST':
+        return JsonResponse({"status": False, "message": "Invalid method"}, status=405)
+
+    data = json.loads(request.body.decode('utf-8'))
+    content = data.get('content')
+
+    if not content:
+        return JsonResponse({"status": False, "message": "Content required"}, status=400)
+
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+    comment = Comment.objects.create(
+        user=request.user,
+        highlight=highlight,
+        content=content
+    )
+
+    return JsonResponse({
+        "status": True,
+        "id": comment.id,
+        "content": comment.content,
+        "user": request.user.username,
+        "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+
+@login_required
+@csrf_exempt
+def toggle_favorite_mobile(request, highlight_id):
+    if request.method != "POST":
+        return JsonResponse({"status": False, "message": "Invalid method"}, status=405)
+
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+    fav, created = Favorite.objects.get_or_create(user=request.user, highlight=highlight)
+
+    if created:
+        return JsonResponse({"status": True, "favorited": True})
+    else:
+        fav.delete()
+        return JsonResponse({"status": True, "favorited": False})
+
+
+@login_required
+@csrf_exempt
+def submit_rating_mobile(request):
+    from uuid import UUID
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        highlight_id = UUID(str(data.get("highlight_id", "")))
+        rating_value = int(data.get("rating", 0))
+
+        if not (1 <= rating_value <= 5):
+            return JsonResponse({"status": False, "message": "Rating must be 1–5"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"status": False, "message": f"Invalid data: {e}"}, status=400)
+
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+
+    try:
+        with transaction.atomic():
+            rating, created = Rating.objects.get_or_create(
+                user=request.user,
+                highlight=highlight,
+                defaults={"value": rating_value}
+            )
+
+            if not created:
+                rating.value = rating_value
+                rating.save(update_fields=["value"])
+
+    except Exception as e:
+        return JsonResponse({
+            "status": False,
+            "message": f"Database error: {e}"
+        }, status=500)
+
+    avg_rating = Rating.objects.filter(highlight=highlight).aggregate(
+        avg=Coalesce(Avg("value"), 0.0)
+    )["avg"]
+
+    return JsonResponse({
+        "status": True,
+        "rating": rating.value,
+        "avg_rating": float(avg_rating),
+        "highlight": {
+            "id": str(highlight.id),
+            "name": highlight.name,
+            "description": highlight.description,
+            "thumbnail": highlight.manual_thumbnail_url,
+            "url": highlight.url,
+            "season": highlight.season,
+            "created_at": highlight.created_at.isoformat(),
+        }
+    })
+
+@login_required
+@csrf_exempt
+def delete_comment_mobile(request, comment_id):
+    if request.method != 'POST':
+        return JsonResponse({"status": False, "message": "Invalid method"}, status=405)
+
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if comment.user != request.user:
+        return JsonResponse({"status": False, "message": "Forbidden"}, status=403)
+
+    comment.delete()
+
+    return JsonResponse({"status": True, "message": "Comment deleted"})
+
+@login_required
+@csrf_exempt
+@login_required
+@csrf_exempt
+@login_required
+@csrf_exempt
+def favorite_list_mobile(request):
+    favorites = Favorite.objects.filter(
+        user=request.user
+    ).select_related("highlight")
+
+    data = []
+
+    for fav in favorites:
+        hl = fav.highlight
+        
+        home_standing = None
+        if hl.home:
+            home_standing = {
+                "team": hl.home.team,
+                "played": hl.home.played,
+                "won": hl.home.won,
+                "drawn": hl.home.drawn,
+                "lost": hl.home.lost,
+            }
+
+        away_standing = None
+        if hl.away:
+            away_standing = {
+                "team": hl.away.team,
+                "played": hl.away.played,
+                "won": hl.away.won,
+                "drawn": hl.away.drawn,
+                "lost": hl.away.lost,
+            }
+
+        data.append({
+            "id": hl.pk,
+            "name": hl.name,
+            "url": hl.url,
+            "description": hl.description,
+            "season": hl.season,
+            "manual_thumbnail_url": hl.manual_thumbnail_url,
+            "created_at": hl.created_at.isoformat(),
+            "home_standing": home_standing,
+            "away_standing": away_standing,
+        })
+
+    return JsonResponse({"status": True, "favorites": data})
+
+
+@login_required
+@csrf_exempt
+def get_user_rating_mobile(request, highlight_id):
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+
+    rating = Rating.objects.filter(
+        user=request.user,
+        highlight=highlight
+    ).first()
+
+    return JsonResponse({
+        "status": True,
+        "rating": rating.value if rating else None
+    })
+
+
+
+@csrf_exempt
+def top_rated_mobile(request):
+    highlights = Highlight.objects.all()
+
+    start = request.GET.get("start_date")
+    end = request.GET.get("end_date")
+
+    if start:
+        highlights = highlights.filter(created_at__date__gte=start)
+    if end:
+        highlights = highlights.filter(created_at__date__lte=end)
+
+    highlights = highlights.annotate(
+        avg_rating=Coalesce(Avg('rating__value'), 0.0)
+    ).order_by('-avg_rating')[:10]
+
+    data = []
+
+    for hl in highlights:
+        print("HL OBJECT:", hl) 
+        print("ID:", hl.id)
+        print("Name:", hl.name)
+        print("Created:", hl.created_at)
+        print("Avg Rating:", hl.avg_rating)
+        print("Thumbnail:", hl.manual_thumbnail_url)
+        print("----------------------------")
+
+        data.append({
+            "id": hl.id,
+            "title": hl.name,
+            "avg_rating": float(hl.avg_rating),
+            "manual_thumbnail_url": hl.manual_thumbnail_url,
+            "description": hl.description,
+            "season": hl.season,
+            "url": hl.url,
+            "created_at": hl.created_at.isoformat(),
+        })
+
+    return JsonResponse({
+        "status": True,
+        "highlights": data,
+        "start_date": start,
+        "end_date": end,
+        "season": hl.season, 
+
     })
