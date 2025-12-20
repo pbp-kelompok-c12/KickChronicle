@@ -33,24 +33,173 @@
             </form>
             <div id="uploadMessage" class="mt-4"></div>
         </div>
+
+        <div class="bg-card rounded-lg shadow-lg p-6 mb-8 border border-border">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-semibold text-card-foreground">Manage Standings</h2>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        Create, edit, delete standings manually. Position must be 1–20 and unique per season.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button
+                        id="btnAddStanding"
+                        type="button"
+                        class="bg-primary text-white px-5 py-2 rounded-md hover:bg-primary/80 transition-colors font-medium"
+                    >
+                        Add Standing
+                    </button>
+                    <div class="flex gap-2">
+                        <select
+                            id="clearSeasonSelect"
+                            class="block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-3 py-2"
+                        >
+                            <option value="22/23">2022/2023</option>
+                            <option value="23/24">2023/2024</option>
+                            <option value="24/25">2024/2025</option>
+                        </select>
+                        <button
+                            id="btnClearSeason"
+                            type="button"
+                            class="bg-red-600 text-white px-5 py-2 rounded-md hover:bg-red-500 transition-colors font-medium"
+                        >
+                            Delete Season
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="adminMessage" class="mt-4"></div>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div id="standingModal" class="fixed inset-0 z-50 hidden">
+            <div id="standingModalBackdrop" class="absolute inset-0 bg-black/70"></div>
+            <div class="relative mx-auto mt-16 w-[92%] max-w-2xl">
+                <div class="bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                        <h3 id="standingModalTitle" class="text-xl font-semibold text-card-foreground">Add Standing</h3>
+                        <button id="btnCloseStandingModal" type="button" class="text-gray-300 hover:text-white">✕</button>
+                    </div>
+                    <form id="standingForm" class="p-6 space-y-4">
+                        <input type="hidden" id="standingId" value="">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Season</label>
+                                <select
+                                    id="standingSeason"
+                                    class="block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-3 py-2"
+                                >
+                                    <option value="22/23">2022/2023</option>
+                                    <option value="23/24">2023/2024</option>
+                                    <option value="24/25">2024/2025</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Position (1–20)</label>
+                                <input
+                                    id="standingPosition"
+                                    type="number"
+                                    min="1"
+                                    max="20"
+                                    class="block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-3 py-2"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Team</label>
+                            <input
+                                id="standingTeam"
+                                type="text"
+                                class="block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-3 py-2"
+                                required
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Pld</label>
+                                <input id="standingPlayed" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">W</label>
+                                <input id="standingWon" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">D</label>
+                                <input id="standingDrawn" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">L</label>
+                                <input id="standingLost" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">GF</label>
+                                <input id="standingGF" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">GA</label>
+                                <input id="standingGA" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-foreground mb-2">Pts</label>
+                                <input id="standingPts" type="number" min="0" class="block w-full rounded-md border-gray-600 bg-gray-700 text-white px-3 py-2" required />
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button
+                                id="btnCancelStanding"
+                                type="button"
+                                class="bg-gray-700 text-white px-5 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                class="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/80 transition-colors font-medium"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
         {% endif %}
 
         <!-- Filter Section -->
         <div class="bg-card rounded-lg shadow-lg p-6 mb-8 border border-border">
             <h2 class="text-xl font-semibold text-card-foreground mb-4">Filter by Season</h2>
             <div class="flex flex-wrap gap-3">
-                <button onclick="filterStandings('all')" class="filter-btn bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/80 transition-colors font-medium">
+                <button onclick="filterStandings('all', this)" class="filter-btn bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/80 transition-colors font-medium">
                     All Seasons
                 </button>
-                <button onclick="filterStandings('22/23')" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                <button onclick="filterStandings('22/23', this)" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
                     2022/2023
                 </button>
-                <button onclick="filterStandings('23/24')" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                <button onclick="filterStandings('23/24', this)" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
                     2023/2024
                 </button>
-                <button onclick="filterStandings('24/25')" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                <button onclick="filterStandings('24/25', this)" class="filter-btn bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
                     2024/2025
                 </button>
+            </div>
+            <div class="mt-4">
+                <label for="standingsSearch" class="block text-sm font-medium text-foreground mb-2">Search Club</label>
+                <input
+                    id="standingsSearch"
+                    type="text"
+                    placeholder="Type to search club (e.g. Manchester City)..."
+                    class="w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-4 py-2"
+                    autocomplete="off"
+                />
             </div>
         </div>
 
@@ -68,12 +217,22 @@
 {% block scripts %}
 <script>
     let currentFilter = 'all';
+    let currentSearch = '';
+    let lastStandings = [];
     const container = document.getElementById('standingsContainer');
     const isSuperuser = container.dataset.isSuperuser === 'true';
 
     // Load standings on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadStandings();
+
+        const searchInput = document.getElementById('standingsSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                currentSearch = e.target.value || '';
+                renderStandings(lastStandings);
+            });
+        }
         
         if (isSuperuser) {
             const uploadForm = document.getElementById('uploadForm');
@@ -112,10 +271,223 @@
                     });
                 });
             }
+
+            // Admin: open modal for create
+            const addBtn = document.getElementById('btnAddStanding');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => openStandingModal());
+            }
+
+            // Admin: clear season
+            const clearBtn = document.getElementById('btnClearSeason');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => handleClearSeason());
+            }
+
+            // Admin: modal close actions
+            document.getElementById('btnCloseStandingModal')?.addEventListener('click', closeStandingModal);
+            document.getElementById('btnCancelStanding')?.addEventListener('click', closeStandingModal);
+            document.getElementById('standingModalBackdrop')?.addEventListener('click', closeStandingModal);
+
+            // Admin: submit create/edit form
+            const standingForm = document.getElementById('standingForm');
+            if (standingForm) {
+                standingForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await submitStandingForm();
+                });
+            }
+
+            // Admin: event delegation for edit/delete buttons
+            container.addEventListener('click', async (e) => {
+                const editBtn = e.target.closest('.js-edit-standing');
+                if (editBtn) {
+                    const encoded = editBtn.dataset.standing || '';
+                    try {
+                        const standing = JSON.parse(decodeURIComponent(encoded));
+                        openStandingModal(standing);
+                    } catch (_) {}
+                    return;
+                }
+
+                const deleteBtn = e.target.closest('.js-delete-standing');
+                if (deleteBtn) {
+                    const id = deleteBtn.dataset.id;
+                    if (!id) return;
+                    await handleDeleteStanding(id);
+                }
+            });
         }
     });
 
-    function filterStandings(season) {
+    function csrfToken() {
+        const el = document.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+
+    function showAdminMessage(html) {
+        const el = document.getElementById('adminMessage');
+        if (!el) return;
+        el.innerHTML = html;
+    }
+
+    function openStandingModal(standing = null) {
+        const modal = document.getElementById('standingModal');
+        if (!modal) return;
+
+        document.getElementById('standingModalTitle').textContent = standing ? 'Edit Standing' : 'Add Standing';
+        document.getElementById('standingId').value = standing?.id ?? '';
+
+        const season = document.getElementById('standingSeason');
+        const position = document.getElementById('standingPosition');
+        const team = document.getElementById('standingTeam');
+        const played = document.getElementById('standingPlayed');
+        const won = document.getElementById('standingWon');
+        const drawn = document.getElementById('standingDrawn');
+        const lost = document.getElementById('standingLost');
+        const gf = document.getElementById('standingGF');
+        const ga = document.getElementById('standingGA');
+        const pts = document.getElementById('standingPts');
+
+        const defaultSeason = currentFilter !== 'all' ? currentFilter : '24/25';
+        season.value = standing?.season ?? defaultSeason;
+        position.value = standing?.position ?? '';
+        team.value = standing?.team ?? '';
+        played.value = standing?.played ?? 0;
+        won.value = standing?.won ?? 0;
+        drawn.value = standing?.drawn ?? 0;
+        lost.value = standing?.lost ?? 0;
+        gf.value = standing?.goals_for ?? 0;
+        ga.value = standing?.goals_against ?? 0;
+        pts.value = standing?.points ?? 0;
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeStandingModal() {
+        const modal = document.getElementById('standingModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+    }
+
+    async function submitStandingForm() {
+        const id = document.getElementById('standingId').value;
+        const season = document.getElementById('standingSeason').value;
+        const position = parseInt(document.getElementById('standingPosition').value, 10);
+        const team = document.getElementById('standingTeam').value.trim();
+
+        if (!team) {
+            showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">Team is required.</div>`);
+            return;
+        }
+        if (!Number.isFinite(position) || position < 1 || position > 20) {
+            showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">Position must be between 1 and 20.</div>`);
+            return;
+        }
+
+        const payload = {
+            season,
+            position,
+            team,
+            played: parseInt(document.getElementById('standingPlayed').value, 10) || 0,
+            won: parseInt(document.getElementById('standingWon').value, 10) || 0,
+            drawn: parseInt(document.getElementById('standingDrawn').value, 10) || 0,
+            lost: parseInt(document.getElementById('standingLost').value, 10) || 0,
+            goals_for: parseInt(document.getElementById('standingGF').value, 10) || 0,
+            goals_against: parseInt(document.getElementById('standingGA').value, 10) || 0,
+            points: parseInt(document.getElementById('standingPts').value, 10) || 0,
+        };
+
+        const createUrl = '{% url "tim:create_standing_api" %}';
+        const editTemplate = '{% url "tim:edit_standing_api" 0 %}';
+        const url = id ? editTemplate.replace('/0/', `/${id}/`) : createUrl;
+
+        try {
+            showAdminMessage(`<div class="bg-yellow-900/30 border border-yellow-500 text-yellow-200 px-4 py-3 rounded">Saving...</div>`);
+
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfToken() ? { 'X-CSRFToken': csrfToken() } : {}),
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await resp.json();
+            if (!resp.ok || data.status !== 'success') {
+                const msg = data.message || 'Failed to save standing.';
+                showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">${msg}</div>`);
+                return;
+            }
+
+            showAdminMessage(`<div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded">${data.message}</div>`);
+            closeStandingModal();
+            loadStandings();
+        } catch (err) {
+            showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">Error: ${err}</div>`);
+        }
+    }
+
+    async function handleDeleteStanding(id) {
+        const confirmed = confirm('Delete this standing?');
+        if (!confirmed) return;
+
+        const deleteTemplate = '{% url "tim:delete_standing_api" 0 %}';
+        const url = deleteTemplate.replace('/0/', `/${id}/`);
+
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfToken() ? { 'X-CSRFToken': csrfToken() } : {}),
+                },
+                body: JSON.stringify({}),
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.status !== 'success') {
+                showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">${data.message || 'Failed to delete standing.'}</div>`);
+                return;
+            }
+            showAdminMessage(`<div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded">${data.message}</div>`);
+            loadStandings();
+        } catch (err) {
+            showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">Error: ${err}</div>`);
+        }
+    }
+
+    async function handleClearSeason() {
+        const select = document.getElementById('clearSeasonSelect');
+        const season = select ? select.value : '';
+        if (!season) return;
+
+        const confirmed = confirm(`Delete ALL standings for season ${season}?`);
+        if (!confirmed) return;
+
+        const url = '{% url "tim:clear_season_api" %}';
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfToken() ? { 'X-CSRFToken': csrfToken() } : {}),
+                },
+                body: JSON.stringify({ season }),
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.status !== 'success') {
+                showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">${data.message || 'Failed to clear season.'}</div>`);
+                return;
+            }
+            showAdminMessage(`<div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded">${data.message}</div>`);
+            loadStandings();
+        } catch (err) {
+            showAdminMessage(`<div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">Error: ${err}</div>`);
+        }
+    }
+
+    function filterStandings(season, el) {
         currentFilter = season;
         loadStandings();
         
@@ -124,8 +496,10 @@
             btn.classList.remove('bg-primary');
             btn.classList.add('bg-gray-700');
         });
-        event.target.classList.remove('bg-gray-700');
-        event.target.classList.add('bg-primary');
+        if (el) {
+            el.classList.remove('bg-gray-700');
+            el.classList.add('bg-primary');
+        }
     }
 
     function loadStandings() {
@@ -137,43 +511,8 @@
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                if (data.standings.length === 0) {
-                    let emptyMessage = `
-                        <div class="text-center py-12 bg-card rounded-lg border border-border">
-                            <p class="text-muted-foreground text-lg">No standings data available yet.</p>`;
-                    
-                    if (isSuperuser) {
-                        emptyMessage += `
-                            <p class="text-sm text-muted-foreground mt-2">Please upload CSV files to populate the data.</p>`;
-                    }
-                    
-                    emptyMessage += `
-                        </div>
-                    `;
-                    
-                    container.innerHTML = emptyMessage;
-                    return;
-                }
-                
-                // Group standings by season
-                const standingsBySeason = {};
-                data.standings.forEach(standing => {
-                    if (!standingsBySeason[standing.season]) {
-                        standingsBySeason[standing.season] = [];
-                    }
-                    standingsBySeason[standing.season].push(standing);
-                });
-                
-                // Generate HTML for each season
-                let html = '';
-                const seasons = Object.keys(standingsBySeason).sort();
-                
-                seasons.forEach(season => {
-                    const seasonStandings = standingsBySeason[season];
-                    html += generateSeasonTable(season, seasonStandings);
-                });
-                
-                container.innerHTML = html;
+                lastStandings = Array.isArray(data.standings) ? data.standings : [];
+                renderStandings(lastStandings);
             })
             .catch(error => {
                 container.innerHTML = `
@@ -182,6 +521,57 @@
                     </div>
                 `;
             });
+    }
+
+    function renderStandings(allStandings) {
+        const container = document.getElementById('standingsContainer');
+        const q = (currentSearch || '').trim().toLowerCase();
+
+        const filtered = q
+            ? allStandings.filter(s => (s.team || '').toLowerCase().includes(q))
+            : allStandings;
+
+        if (filtered.length === 0) {
+            const message = q
+                ? 'No standings found for this search.'
+                : 'No standings data available yet.';
+
+            let html = `
+                <div class="text-center py-12 bg-card rounded-lg border border-border">
+                    <p class="text-muted-foreground text-lg">${message}</p>`;
+
+            if (!q && isSuperuser) {
+                html += `
+                    <p class="text-sm text-muted-foreground mt-2">Please upload CSV files to populate the data.</p>`;
+            }
+
+            html += `
+                </div>
+            `;
+
+            container.innerHTML = html;
+            return;
+        }
+
+        // Group standings by season
+        const standingsBySeason = {};
+        filtered.forEach(standing => {
+            if (!standingsBySeason[standing.season]) {
+                standingsBySeason[standing.season] = [];
+            }
+            standingsBySeason[standing.season].push(standing);
+        });
+
+        // Generate HTML for each season
+        let html = '';
+        const seasons = Object.keys(standingsBySeason).sort();
+
+        seasons.forEach(season => {
+            const seasonStandings = standingsBySeason[season];
+            html += generateSeasonTable(season, seasonStandings);
+        });
+
+        container.innerHTML = html;
     }
 
     function generateSeasonTable(season, standings) {
@@ -210,6 +600,7 @@
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">GA</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">GD</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Pts</th>
+                                ${isSuperuser ? `<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>` : ''}
                             </tr>
                         </thead>
                         <tbody class="bg-card divide-y divide-border">
@@ -219,7 +610,12 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
                                         <div class="flex items-center gap-3">
                                             ${standing.logo_url ? `<img src="${standing.logo_url}" alt="${standing.team} logo" class="w-8 h-8 rounded-full object-cover"/>` : `<div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-300">N/A</div>`}
-                                            <span>${standing.team}</span>
+                                            <a
+                                                href="{% url 'kalender:team_schedule' %}?team=${encodeURIComponent(standing.calendar_team || standing.team)}"
+                                                class="hover:underline"
+                                            >
+                                                ${standing.team}
+                                            </a>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.played}</td>
@@ -230,6 +626,26 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-foreground">${standing.goals_against}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-semibold ${standing.goal_difference >= 0 ? 'text-green-400' : 'text-red-400'}">${standing.goal_difference > 0 ? '+' : ''}${standing.goal_difference}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-foreground">${standing.points}</td>
+                                    ${isSuperuser ? `
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    class="js-edit-standing bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-md text-xs font-medium transition-colors"
+                                                    data-standing="${encodeURIComponent(JSON.stringify(standing))}"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="js-delete-standing bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-md text-xs font-medium transition-colors"
+                                                    data-id="${standing.id}"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    ` : ''}
                                 </tr>
                             `).join('')}
                         </tbody>

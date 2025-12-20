@@ -17,7 +17,7 @@
       <div class="flex items-center justify-end gap-3 text-right">
         <span class="text-xl font-bold text-white truncate">{{ jadwal.team_1 }}</span>
         {% if jadwal.team_1_logo %}
-          <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }}"
+          <img src="{{ jadwal.team_1_logo_url }}" alt="{{ jadwal.team_1 }}"
                class="w-12 h-12 rounded-full object-cover border border-gray-600">
         {% else %}
           <div class="w-12 h-12 rounded-full bg-gray-600 border border-gray-500"></div>
@@ -30,7 +30,7 @@
 
       <div class="flex items-center justify-start gap-3 text-left">
         {% if jadwal.team_2_logo %}
-          <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }}"
+          <img src="{{ jadwal.team_2_logo_url }}" alt="{{ jadwal.team_2 }}"
                class="w-12 h-12 rounded-full object-cover border border-gray-600">
         {% else %}
           <div class="w-12 h-12 rounded-full bg-gray-600 border border-gray-500"></div>
