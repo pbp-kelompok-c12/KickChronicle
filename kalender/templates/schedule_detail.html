@@ -6,8 +6,9 @@
 <div class="w-full max-w-3xl mx-auto mt-16 relative">
   <div class="absolute -top-8 left-0">
     <a href="{% url 'kalender:schedule_index' %}" 
-       class="text-gray-400 hover:text-white text-sm transition">
-      ← Back to Schedule
+       class="text-gray-400 hover:text-white text-sm transition"
+       onclick="event.preventDefault(); if (window.history.length > 1) { window.history.back(); } else { window.location.href = this.href; }">
+      ← Back
     </a>
   </div>
 
