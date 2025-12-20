@@ -45,4 +45,5 @@ urlpatterns = [
     path('mobile/profile/edit/', views.edit_profile_flutter, name='edit_profile_flutter'),
     path('mobile/change-password/', views.change_password_flutter, name='change_password_flutter'),
     path('mobile/delete-account/', views.delete_account_flutter, name='delete_account_flutter'),
+    path('mobile/reset-password/', views.password_reset_request_flutter, name='password_reset_request_flutter'),
 ]

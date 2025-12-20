@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -410,3 +410,33 @@ def delete_account_flutter(request):
             return JsonResponse({"status": False, "message": str(e)}, status=500)
     
     return JsonResponse({"status": False, "message": "Method not allowed atau belum login"}, status=401)
+
+@csrf_exempt
+def password_reset_request_flutter(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            # PasswordResetForm bawaan Django mengharapkan dict dengan key 'email'
+            form = PasswordResetForm(data)
+            
+            if form.is_valid():
+                # Opsi: email_template_name bisa disesuaikan jika ingin format khusus
+                # form.save() akan mengirimkan email secara otomatis sesuai setting SMTP Django Anda
+                # use_https=request.is_secure() memastikan link di email protokolnya benar
+                form.save(
+                    request=request,
+                    use_https=request.is_secure(),
+                    email_template_name='password_reset_email.html', # Template bawaan auth_profil Anda
+                )
+                
+                return JsonResponse({
+                    "status": True, 
+                    "message": "Jika email terdaftar, link reset password telah dikirim."
+                }, status=200)
+            else:
+                return JsonResponse({"status": False, "message": "Format email tidak valid."}, status=400)
+        
+        except Exception as e:
+            return JsonResponse({"status": False, "message": str(e)}, status=500)
+
+    return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
