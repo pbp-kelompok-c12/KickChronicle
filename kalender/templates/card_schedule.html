@@ -10,13 +10,13 @@
             <div class="flex items-center justify-between gap-x-4">
                 <div class="flex flex-1 items-center justify-end gap-x-3 min-w-0">
                     <span class="text-right text-white font-semibold truncate">{{ jadwal.team_1 }}</span>
-                    <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }} logo" class="h-10 w-10 rounded-full object-cover">
+                    <img src="{{ jadwal.team_1_logo_url }}" alt="{{ jadwal.team_1 }} logo" class="h-10 w-10 rounded-full object-cover">
                 </div>
                 <div class="flex-none text-white font-bold text-xl text-center">
                     {{ jadwal.time|time:"H:i" }}
                 </div>
                 <div class="flex flex-1 items-center justify-start gap-x-3 min-w-0">
-                    <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }} logo" class="h-10 w-10 rounded-full object-cover">
+                    <img src="{{ jadwal.team_2_logo_url }}" alt="{{ jadwal.team_2 }} logo" class="h-10 w-10 rounded-full object-cover">
                     <span class="text-left text-white font-semibold truncate">{{ jadwal.team_2 }}</span>
                 </div>
             </div>
@@ -33,13 +33,13 @@
         <div class="flex items-center justify-between gap-x-4">
             <div class="flex flex-1 items-center justify-end gap-x-3 min-w-0">
                 <span class="text-right text-white font-semibold truncate">{{ jadwal.team_1 }}</span>
-                <img src="{{ jadwal.team_1_logo }}" alt="{{ jadwal.team_1 }} logo" class="h-10 w-10 rounded-full object-cover">
+                <img src="{{ jadwal.team_1_logo_url }}" alt="{{ jadwal.team_1 }} logo" class="h-10 w-10 rounded-full object-cover">
             </div>
             <div class="flex-none text-white font-bold text-xl text-center">
                 {{ jadwal.time|time:"H:i" }}
             </div>
             <div class="flex flex-1 items-center justify-start gap-x-3 min-w-0">
-                <img src="{{ jadwal.team_2_logo }}" alt="{{ jadwal.team_2 }} logo" class="h-10 w-10 rounded-full object-cover">
+                <img src="{{ jadwal.team_2_logo_url }}" alt="{{ jadwal.team_2 }} logo" class="h-10 w-10 rounded-full object-cover">
                 <span class="text-left text-white font-semibold truncate">{{ jadwal.team_2 }}</span>
             </div>
         </div>

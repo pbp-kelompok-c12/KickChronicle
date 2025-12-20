@@ -9,6 +9,7 @@ from datetime import datetime
 from icalendar import Calendar, Event
 from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 import pytz
 import csv
 import io
@@ -49,9 +50,9 @@ def get_matches_api(request):
             {
                 "id": jadwal.id,
                 "team_1": jadwal.team_1,
-                "team_1_logo": jadwal.team_1_logo,
+                "team_1_logo": jadwal.team_1_logo_url,
                 "team_2": jadwal.team_2,
-                "team_2_logo": jadwal.team_2_logo,
+                "team_2_logo": jadwal.team_2_logo_url,
                 "start_time": jadwal.time.strftime("%H:%M"),
                 "description": jadwal.description or ""
             }
@@ -65,6 +66,33 @@ def get_matches_api(request):
      
     except (ValueError, TypeError):
         return JsonResponse({"matches": []})
+
+
+@login_required
+def get_team_matches_api(request):
+    team = (request.GET.get("team") or "").strip()
+    if not team:
+        return JsonResponse({"matches": []})
+
+    jadwal_list = Kalender.objects.filter(
+        Q(team_1__iexact=team) | Q(team_2__iexact=team)
+    ).order_by("date", "time")
+
+    match_list = [
+        {
+            "id": jadwal.id,
+            "team_1": jadwal.team_1,
+            "team_1_logo": jadwal.team_1_logo_url,
+            "team_2": jadwal.team_2,
+            "team_2_logo": jadwal.team_2_logo_url,
+            "date": jadwal.date.strftime("%Y-%m-%d"),
+            "start_time": jadwal.time.strftime("%H:%M"),
+            "description": jadwal.description or "",
+        }
+        for jadwal in jadwal_list
+    ]
+
+    return JsonResponse({"matches": match_list}, safe=False)
 
 @login_required
 def export_kalender_ics(request, kalender_id):
@@ -136,6 +164,26 @@ def delete_schedule_view(request, pk):
 def schedule_detail_view(request, pk):
     jadwal = get_object_or_404(Kalender, pk=pk)
     return render(request, "schedule_detail.html", {"jadwal": jadwal})
+
+
+@login_required
+def team_schedule_page(request):
+    team = (request.GET.get("team") or "").strip()
+    matches = []
+
+    if team:
+        matches = Kalender.objects.filter(
+            Q(team_1__iexact=team) | Q(team_2__iexact=team)
+        ).order_by("date", "time")
+
+    return render(
+        request,
+        "team_schedule.html",
+        {
+            "team": team,
+            "matches": matches,
+        },
+    )
 
 
 @staff_member_required

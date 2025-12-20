@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 class Standing(models.Model):
     SEASON_CHOICES = [
@@ -26,6 +28,25 @@ class Standing(models.Model):
     class Meta:
         ordering = ['season', 'position']
         unique_together = ['season', 'position']
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(position__gte=1) & Q(position__lte=20),
+                name='tim_standing_position_1_20',
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        if self.position is None or not (1 <= int(self.position) <= 20):
+            raise ValidationError({'position': 'Position must be between 1 and 20.'})
+
+        if Standing.objects.filter(season=self.season, position=self.position).exclude(
+            pk=self.pk
+        ).exists():
+            raise ValidationError(
+                {'position': 'This position is already used for the selected season.'}
+            )
     
     def __str__(self):
         return f"{self.season} - {self.position}. {self.team}"
