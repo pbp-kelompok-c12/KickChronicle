@@ -9,8 +9,9 @@
     <a
       href="{% url 'tim:standings_page' %}"
       class="text-sm text-gray-300 hover:text-white transition"
+      onclick="event.preventDefault(); if (window.history.length > 1) { window.history.back(); } else { window.location.href = this.href; }"
     >
-      ← Back to Standings
+      ← Back
     </a>
 
     {% if team %}
