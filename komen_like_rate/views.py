@@ -168,9 +168,14 @@ def get_comments_mobile(request, highlight_id):
         profile = getattr(c.user, "profile", None)
 
         if profile and profile.image:
-            avatar_url = request.build_absolute_uri(profile.image.url)
+            avatar_url = profile.image.url
+            if not avatar_url.startswith('http'):
+                avatar_url = request.build_absolute_uri(avatar_url)
         else:
             avatar_url = request.build_absolute_uri(static("img/default.png"))
+
+        if avatar_url.startswith('http:'):
+            avatar_url = avatar_url.replace('http:', 'https:', 1)
 
         data.append({
             "id": c.id,
@@ -179,7 +184,6 @@ def get_comments_mobile(request, highlight_id):
             "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "avatar": avatar_url,
             "is_owner": c.user_id == request.user.id,
-
         })
 
     return JsonResponse({"status": True, "comments": data})
