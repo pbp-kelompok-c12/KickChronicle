@@ -202,17 +202,27 @@ def google_login_flutter(request):
         try:
             data = json.loads(request.body)
             email = data.get('email')
-            # 1. AMBIL URL FOTO DARI GOOGLE (Pastikan Flutter mengirim key 'photoUrl')
-            photo_url = data.get('photoUrl') 
 
             if not email:
                 return JsonResponse({'status': False, 'message': 'Email diperlukan'}, status=400)
 
+            # Cek apakah user sudah ada
             user = User.objects.filter(email=email).first()
 
-            if not user:
-                # Buat User Baru
+            if user:
+                # Login user yang sudah ada
+                # PENTING: Kita harus menentukan 'backend' secara manual karena tidak lewat authenticate()
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return JsonResponse({
+                    'status': True, 
+                    'message': 'Login Google berhasil', 
+                    'username': user.username
+                })
+            else:
+                # Opsional: Buat akun baru otomatis jika email belum terdaftar
                 username = email.split('@')[0]
+                
+                # Pastikan username unik (tambah angka jika sudah ada)
                 base_username = username
                 counter = 1
                 while User.objects.filter(username=username).exists():
@@ -220,46 +230,20 @@ def google_login_flutter(request):
                     counter += 1
 
                 user = User.objects.create_user(username=username, email=email)
-                user.set_unusable_password()
+                user.set_unusable_password() # User Google tidak butuh password
                 user.save()
 
-            # 2. LOGIKA SIMPAN FOTO GOOGLE (Untuk User Baru / Lama yg belum ada foto)
-            if user and photo_url:
-                profile, created = Profile.objects.get_or_create(user=user)
-                
-                # Cek jika profile belum punya gambar (masih kosong/default)
-                if not profile.image:
-                    try:
-                        # Download gambar dari URL Google
-                        response = requests.get(photo_url)
-                        if response.status_code == 200:
-                            # Simpan ke field image
-                            file_name = f"{user.username}_google_avatar.jpg"
-                            profile.image.save(file_name, ContentFile(response.content), save=True)
-                    except Exception as e:
-                        print(f"Gagal menyimpan foto profil Google: {e}")
-
-            # Login User
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            
-            # Ambil URL foto terbaru untuk dikirim balik ke Flutter
-            final_photo_url = ""
-            if hasattr(user, 'profile') and user.profile.image:
-                final_photo_url = user.profile.image.url
-                if not final_photo_url.startswith('http'):
-                    final_photo_url = request.build_absolute_uri(final_photo_url)
-                if final_photo_url.startswith('http:'):
-                    final_photo_url = final_photo_url.replace('http:', 'https:', 1)
-
-            return JsonResponse({
-                'status': True, 
-                'message': 'Login Google berhasil', 
-                'username': user.username,
-                'photoUrl': final_photo_url,
-            })
+                # Login user baru tersebut
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return JsonResponse({
+                    'status': True, 
+                    'message': 'Akun berhasil dibuat & Login berhasil', 
+                    'username': user.username
+                })
 
         except Exception as e:
-            print(f"Error Google Login: {e}")
+            # Menangkap error lain agar tidak sekadar '500 Internal Server Error'
+            print(f"Error Google Login: {e}") # Log ke terminal Django
             return JsonResponse({'status': False, 'message': f'Server Error: {str(e)}'}, status=500)
 
     return JsonResponse({'status': False, 'message': 'Method not allowed'}, status=405)
