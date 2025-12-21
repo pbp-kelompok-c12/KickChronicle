@@ -370,35 +370,52 @@ def top_rated_mobile(request):
 
     highlights = highlights.annotate(
         avg_rating=Coalesce(Avg('rating__value'), 0.0)
-    ).order_by('-avg_rating')[:10]
+    ).order_by('-avg_rating')
 
     data = []
 
-    for hl in highlights:
-        print("HL OBJECT:", hl) 
-        print("ID:", hl.id)
-        print("Name:", hl.name)
-        print("Created:", hl.created_at)
-        print("Avg Rating:", hl.avg_rating)
-        print("Thumbnail:", hl.manual_thumbnail_url)
-        print("----------------------------")
+    for highlight in highlights:
+
+        # HOME STANDING
+        home_standing = None
+        if highlight.home:
+            home_standing = {
+                "team": highlight.home.team,
+                "played": highlight.home.played,
+                "won": highlight.home.won,
+                "drawn": highlight.home.drawn,
+                "lost": highlight.home.lost,
+            }
+
+        # AWAY STANDING
+        away_standing = None
+        if highlight.away:
+            away_standing = {
+                "team": highlight.away.team,
+                "played": highlight.away.played,
+                "won": highlight.away.won,
+                "drawn": highlight.away.drawn,
+                "lost": highlight.away.lost,
+            }
 
         data.append({
-            "id": hl.id,
-            "title": hl.name,
-            "avg_rating": float(hl.avg_rating),
-            "manual_thumbnail_url": hl.manual_thumbnail_url,
-            "description": hl.description,
-            "season": hl.season,
-            "url": hl.url,
-            "created_at": hl.created_at.isoformat(),
+            "id": highlight.pk,
+            "name": highlight.name,
+            "title": highlight.name,  # untuk mobile
+            "url": highlight.url,
+            "description": highlight.description,
+            "season": highlight.season,
+            "manual_thumbnail_url": highlight.manual_thumbnail_url,
+            "created_at": highlight.created_at.isoformat(),
+            "avg_rating": float(highlight.avg_rating),
+            "home_standing": home_standing,
+            "away_standing": away_standing,
         })
 
     return JsonResponse({
         "status": True,
-        "highlights": data,
+        "count": len(data),
         "start_date": start,
         "end_date": end,
-        "season": hl.season, 
-
+        "highlights": data
     })
