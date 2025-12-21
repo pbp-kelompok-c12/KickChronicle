@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
+from django.templatetags.static import static
 from django.db.models.functions import Coalesce
 from django.db import transaction
 from .models import Rating, Comment, Favorite
@@ -162,15 +163,24 @@ def get_comments_mobile(request, highlight_id):
         highlight=highlight
     ).select_related("user").order_by('-created_at')
 
-    data = [
-        {
+    data = []
+    for c in comments:
+        profile = getattr(c.user, "profile", None)
+
+        if profile and profile.image:
+            avatar_url = request.build_absolute_uri(profile.image.url)
+        else:
+            avatar_url = request.build_absolute_uri(static("img/default.png"))
+
+        data.append({
             "id": c.id,
             "user": c.user.username,
             "content": c.content,
             "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        }
-        for c in comments
-    ]
+            "avatar": avatar_url,
+            "is_owner": c.user_id == request.user.id,
+
+        })
 
     return JsonResponse({"status": True, "comments": data})
 
