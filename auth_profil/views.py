@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -16,6 +16,9 @@ import json
 from django.utils.crypto import get_random_string
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .models import Profile
+import base64
+from django.core.files.base import ContentFile
 
 def register_user(request):
     if request.method == 'POST':
@@ -260,7 +263,7 @@ def register_flutter(request):
 
         # 1. Validasi Input Kosong
         if not username or not email or not password or not password_confirm:
-             return JsonResponse({"status": False, "message": "Semua field harus diisi"}, status=400)
+            return JsonResponse({"status": False, "message": "Semua field harus diisi"}, status=400)
 
         # 2. Validasi Password Match
         if password != password_confirm:
@@ -305,3 +308,135 @@ def check_superuser(request):
         "is_superuser": False,
         "message": "User not authenticated"
     }, status=200)
+
+@csrf_exempt
+def get_user_profile(request):
+    if request.user.is_authenticated:
+        user = request.user
+        # Get or Create profile untuk menghindari error jika profile belum ada
+        profile, created = Profile.objects.get_or_create(user=user)
+
+        data = {
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            # Mengembalikan URL gambar jika ada di database Django
+            'image_url': profile.image.url if profile.image else None, 
+        }
+        return JsonResponse({'status': True, 'data': data}, status=200)
+    return JsonResponse({'status': False, 'message': 'Belum login'}, status=401)
+
+@csrf_exempt
+def edit_profile_flutter(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            data = json.loads(request.body)
+            user = request.user
+            profile = user.profile # Pastikan profile sudah dibuat via signal/get_user_profile
+
+            # 1. Update Data User (Username, Email, Nama)
+            new_username = data.get('username')
+            new_email = data.get('email')
+            
+            # Validasi Username Unik (jika berubah)
+            if new_username and new_username != user.username:
+                if User.objects.filter(username=new_username).exists():
+                    return JsonResponse({'status': False, 'message': 'Username sudah digunakan.'}, status=400)
+                user.username = new_username
+
+            # Validasi Email Unik (jika berubah)
+            if new_email and new_email != user.email:
+                if User.objects.filter(email=new_email).exists():
+                    return JsonResponse({'status': False, 'message': 'Email sudah digunakan.'}, status=400)
+                user.email = new_email
+
+            user.first_name = data.get('first_name', user.first_name)
+            user.last_name = data.get('last_name', user.last_name)
+            user.save()
+
+            # 2. Update Foto Profil (Base64)
+            image_data = data.get('image')
+            if image_data:
+                # Format base64 dari flutter biasanya raw string, tapi kadang ada prefix data:image/...
+                if ";" in image_data:
+                    format, imgstr = image_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                else:
+                    imgstr = image_data
+                    ext = "png" # Default extension
+
+                data_img = ContentFile(base64.b64decode(imgstr), name=f'{user.username}_avatar.{ext}')
+                profile.image = data_img
+                profile.save()
+
+            return JsonResponse({'status': True, 'message': 'Profil berhasil diperbarui!'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': False, 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': False, 'message': 'Method not allowed'}, status=405)
+
+@csrf_exempt
+def change_password_flutter(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            data = json.loads(request.body)
+            # CustomPasswordChangeForm membutuhkan user sebagai argumen pertama
+            form = CustomPasswordChangeForm(user=request.user, data=data)
+            
+            if form.is_valid():
+                user = form.save()
+                # Penting: Update session agar user tidak ter-logout otomatis setelah ganti password
+                update_session_auth_hash(request, user)
+                return JsonResponse({"status": True, "message": "Password berhasil diubah!"}, status=200)
+            else:
+                # Mengambil error pertama dari form
+                error_msg = next(iter(form.errors.values()))[0]
+                return JsonResponse({"status": False, "message": error_msg}, status=400)
+        except Exception as e:
+            return JsonResponse({"status": False, "message": str(e)}, status=500)
+
+    return JsonResponse({"status": False, "message": "Method not allowed atau belum login"}, status=401)
+
+@csrf_exempt
+def delete_account_flutter(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            user = request.user
+            user.delete() # Menghapus user dan profil terkait (Cascade)
+            logout(request)
+            return JsonResponse({"status": True, "message": "Akun berhasil dihapus."}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": False, "message": str(e)}, status=500)
+    
+    return JsonResponse({"status": False, "message": "Method not allowed atau belum login"}, status=401)
+
+@csrf_exempt
+def password_reset_request_flutter(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            # PasswordResetForm bawaan Django mengharapkan dict dengan key 'email'
+            form = PasswordResetForm(data)
+            
+            if form.is_valid():
+                # Opsi: email_template_name bisa disesuaikan jika ingin format khusus
+                # form.save() akan mengirimkan email secara otomatis sesuai setting SMTP Django Anda
+                # use_https=request.is_secure() memastikan link di email protokolnya benar
+                form.save(
+                    request=request,
+                    use_https=request.is_secure(),
+                    email_template_name='password_reset_email.html', # Template bawaan auth_profil Anda
+                )
+                
+                return JsonResponse({
+                    "status": True, 
+                    "message": "Jika email terdaftar, link reset password telah dikirim."
+                }, status=200)
+            else:
+                return JsonResponse({"status": False, "message": "Format email tidak valid."}, status=400)
+        
+        except Exception as e:
+            return JsonResponse({"status": False, "message": str(e)}, status=500)
+
+    return JsonResponse({"status": False, "message": "Method not allowed"}, status=405)
