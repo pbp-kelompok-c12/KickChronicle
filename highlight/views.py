@@ -257,7 +257,7 @@ def add_highlights_csv(request):
         return HttpResponseForbidden("403 FORBIDDEN")
 
 @csrf_exempt
-@user_passes_test(lambda u: u.is_superuser)
+# @user_passes_test(lambda u: u.is_superuser)
 def add_highlights_csv_flutter(request):
     if request.method == 'POST':
         try:
