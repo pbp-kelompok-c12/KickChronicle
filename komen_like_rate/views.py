@@ -207,14 +207,28 @@ def add_comment_mobile(request, highlight_id):
         content=content
     )
 
+    # --- TAMBAHAN LOGIKA AVATAR (SAMA SEPERTI GET) ---
+    profile = getattr(request.user, "profile", None)
+    if profile and profile.image:
+        avatar_url = profile.image.url
+        # Pastikan absolute URL
+        if not avatar_url.startswith('http'):
+            avatar_url = request.build_absolute_uri(avatar_url)
+    else:
+        avatar_url = request.build_absolute_uri(static("img/default.png"))
+
+    if avatar_url.startswith('http:'):
+        avatar_url = avatar_url.replace('http:', 'https:', 1)
+
     return JsonResponse({
         "status": True,
         "id": comment.id,
         "content": comment.content,
         "user": request.user.username,
-        "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "avatar": avatar_url,
+        "is_owner": True
     })
-
 
 @login_required
 @csrf_exempt
