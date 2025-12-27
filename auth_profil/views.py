@@ -211,7 +211,6 @@ def google_login_flutter(request):
 
             if user:
                 # Login user yang sudah ada
-                # PENTING: Kita harus menentukan 'backend' secara manual karena tidak lewat authenticate()
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return JsonResponse({
                     'status': True, 
@@ -278,8 +277,6 @@ def register_flutter(request):
             return JsonResponse({"status": False, "message": "Email sudah terdaftar. Silakan login."}, status=409)
 
         # 5. Validasi Password Standard Django (BARU - Sesuai Foto)
-        # Kita buat user sementara (belum disimpan) untuk validasi password
-        # agar validator bisa mengecek kemiripan dengan username/email
         temp_user = User(username=username, email=email)
         try:
             validate_password(password, user=temp_user)
@@ -333,7 +330,7 @@ def edit_profile_flutter(request):
         try:
             data = json.loads(request.body)
             user = request.user
-            profile = user.profile # Pastikan profile sudah dibuat via signal/get_user_profile
+            profile = user.profile
 
             # 1. Update Data User (Username, Email, Nama)
             new_username = data.get('username')
@@ -345,7 +342,7 @@ def edit_profile_flutter(request):
                     return JsonResponse({'status': False, 'message': 'Username sudah digunakan.'}, status=400)
                 user.username = new_username
 
-            # Validasi Email Unik (jika berubah)
+            # Validasi Email Unik
             if new_email and new_email != user.email:
                 if User.objects.filter(email=new_email).exists():
                     return JsonResponse({'status': False, 'message': 'Email sudah digunakan.'}, status=400)
@@ -355,7 +352,7 @@ def edit_profile_flutter(request):
             user.last_name = data.get('last_name', user.last_name)
             user.save()
 
-            # 2. Update Foto Profil (Base64)
+            # 2. Update Foto Profil
             image_data = data.get('image')
             if image_data:
                 # Format base64 dari flutter biasanya raw string, tapi kadang ada prefix data:image/...
@@ -364,7 +361,7 @@ def edit_profile_flutter(request):
                     ext = format.split('/')[-1]
                 else:
                     imgstr = image_data
-                    ext = "png" # Default extension
+                    ext = "png"
 
                 data_img = ContentFile(base64.b64decode(imgstr), name=f'{user.username}_avatar.{ext}')
                 profile.image = data_img
@@ -386,7 +383,7 @@ def change_password_flutter(request):
             
             if form.is_valid():
                 user = form.save()
-                # Penting: Update session agar user tidak ter-logout otomatis setelah ganti password
+                # Update session agar user tidak ter-logout otomatis setelah ganti password
                 update_session_auth_hash(request, user)
                 return JsonResponse({"status": True, "message": "Password berhasil diubah!"}, status=200)
             else:
@@ -420,7 +417,6 @@ def password_reset_request_flutter(request):
             form = PasswordResetForm(data)
             
             if form.is_valid():
-                # Opsi: email_template_name bisa disesuaikan jika ingin format khusus
                 # form.save() akan mengirimkan email secara otomatis sesuai setting SMTP Django Anda
                 # use_https=request.is_secure() memastikan link di email protokolnya benar
                 form.save(
